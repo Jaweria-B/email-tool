@@ -1,6 +1,11 @@
 "use client"
 import React, { useState } from 'react';
 import { Send, Copy, Mail, Settings, Sparkles, User, Building, MessageSquare, Clock, Heart, Briefcase, Shield, Smile } from 'lucide-react';
+import { EmailGenerationService, createPrompt } from '../lib/ai-services';
+import { AI_PROVIDERS, AI_PROVIDER_INFO } from '../lib/ai-config';
+import ProviderSelector from '../components/ProviderSelector';
+import ApiSettings from '../components/ApiSettings';
+import EmailSender from '../components/EmailSender';
 
 const EmailWriter = () => {
   const [formData, setFormData] = useState({
@@ -15,11 +20,20 @@ const EmailWriter = () => {
     purpose: 'general',
     length: 'medium'
   });
+  
+  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.QWEN);
+  const [apiKeys, setApiKeys] = useState({
+    [AI_PROVIDERS.QWEN]: '',
+    [AI_PROVIDERS.OPENAI]: '',
+    [AI_PROVIDERS.DEEPSEEK]: '',
+    [AI_PROVIDERS.GEMINI]: ''
+  });
+  
   const [generatedEmail, setGeneratedEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showEmailSender, setShowEmailSender] = useState(false);
 
   const tones = [
     { value: 'professional', label: 'Professional', icon: Briefcase },
@@ -69,9 +83,22 @@ const EmailWriter = () => {
     }));
   };
 
+  const handleProviderChange = (provider) => {
+    setSelectedProvider(provider);
+  };
+
+  const handleApiKeyChange = (provider, apiKey) => {
+    setApiKeys(prev => ({
+      ...prev,
+      [provider]: apiKey
+    }));
+  };
+
   const generateEmail = async () => {
-    if (!apiKey) {
-      alert('Please enter your AIML API key in settings');
+    const currentApiKey = apiKeys[selectedProvider];
+    
+    if (!currentApiKey) {
+      alert(`Please enter your ${AI_PROVIDER_INFO[selectedProvider].name} API key in settings`);
       return;
     }
 
@@ -83,62 +110,10 @@ const EmailWriter = () => {
     setIsLoading(true);
     
     try {
-      const prompt = `Transform the following raw thoughts into a well-written email:
-
-Raw thoughts: ${formData.rawThoughts}
-
-Email Details:
-- Tone: ${formData.tone}
-- Recipient: ${formData.recipient || 'Not specified'}
-- Subject context: ${formData.subject || 'Not specified'}
-- Relationship: ${formData.relationship}
-- Purpose: ${formData.purpose}
-- Priority: ${formData.priority}
-- Desired length: ${formData.length}
-- Additional context: ${formData.context || 'None'}
-${formData.replyingTo ? `- Replying to this email: ${formData.replyingTo}` : ''}
-
-Please write a ${formData.tone} email that is ${formData.length} in length. Make it appropriate for the relationship type (${formData.relationship}) and purpose (${formData.purpose}). ${formData.priority === 'urgent' ? 'This is urgent, so make that clear.' : ''} ${formData.priority === 'high' ? 'This has high priority.' : ''}
-
-Return only the email content without any additional commentary.`;
-
-      // Correct AIML API implementation
-      const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}` // Remove 'Bearer ' prefix if it's already in the API key
-        },
-        body: JSON.stringify({
-          model: 'google/gemma-3n-e4b-it', // Using qwen-max model
-          messages: [
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7,
-          top_p: 0.7,
-          frequency_penalty: 0.5
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        throw new Error(`API request failed: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      
-      // Check if response has the expected structure
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        setGeneratedEmail(data.choices[0].message.content);
-      } else {
-        console.error('Unexpected API response:', data);
-        throw new Error('Unexpected response format from API');
-      }
+      const emailService = new EmailGenerationService(selectedProvider, currentApiKey);
+      const prompt = createPrompt(formData);
+      const result = await emailService.generateEmail(prompt);
+      setGeneratedEmail(result);
     } catch (error) {
       console.error('Error generating email:', error);
       alert(`Error generating email: ${error.message}. Please check your API key and try again.`);
@@ -157,6 +132,23 @@ Return only the email content without any additional commentary.`;
     }
   };
 
+  const openEmailSender = () => {
+    if (!generatedEmail) {
+      alert('Please generate an email first before sending');
+      return;
+    }
+    setShowEmailSender(true);
+  };
+
+  if (showEmailSender) {
+    return (
+      <EmailSender 
+        generatedEmail={generatedEmail}
+        onBack={() => setShowEmailSender(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
       <div className="container mx-auto px-4 py-8">
@@ -171,7 +163,7 @@ Return only the email content without any additional commentary.`;
             Email<span className="bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">Craft</span>
           </h1>
           <p className="text-purple-100 text-xl max-w-2xl mx-auto leading-relaxed">
-            Transform your thoughts into perfectly crafted emails with AI-powered writing assistance
+            Transform your thoughts into perfectly crafted emails with multiple AI providers
           </p>
           
           {/* Settings Button */}
@@ -186,29 +178,12 @@ Return only the email content without any additional commentary.`;
 
         {/* Settings Panel */}
         {showSettings && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 mb-8 shadow-2xl">
-            <h3 className="text-white text-xl font-semibold mb-4">AIML API Configuration</h3>
-            <input
-              type="password"
-              placeholder="Enter your AIML API key (without 'Bearer ' prefix)"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+          <div className="mb-8">
+            <ApiSettings
+              selectedProvider={selectedProvider}
+              apiKeys={apiKeys}
+              onApiKeyChange={handleApiKeyChange}
             />
-            <div className="mt-4 p-4 bg-blue-500/20 rounded-xl border border-blue-300/30">
-              <p className="text-blue-200 text-sm mb-2">
-                <strong>How to get your API key:</strong>
-              </p>
-              <ol className="text-blue-200 text-sm space-y-1 list-decimal list-inside">
-                <li>Go to <a href="https://aimlapi.com" target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-white underline">aimlapi.com</a></li>
-                <li>Sign up for an account</li>
-                <li>Navigate to your dashboard</li>
-                <li>Copy your API key (just the key, not including "Bearer ")</li>
-              </ol>
-            </div>
-            <p className="text-purple-200 text-xs mt-2">
-              Note: Enter only your API key without the "Bearer " prefix. The app will add it automatically.
-            </p>
           </div>
         )}
 
@@ -221,6 +196,12 @@ Return only the email content without any additional commentary.`;
             </h2>
             
             <div className="space-y-6">
+              {/* AI Provider Selection */}
+              <ProviderSelector
+                selectedProvider={selectedProvider}
+                onProviderChange={handleProviderChange}
+              />
+
               {/* Raw Thoughts */}
               <div>
                 <label className="block text-purple-100 text-sm font-medium mb-3">
@@ -399,12 +380,12 @@ Return only the email content without any additional commentary.`;
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Crafting your email...
+                    Crafting with {AI_PROVIDER_INFO[selectedProvider].name}...
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-5 w-5" />
-                    Generate Email
+                    Generate Email with {AI_PROVIDER_INFO[selectedProvider].name}
                   </>
                 )}
               </button>
@@ -418,19 +399,30 @@ Return only the email content without any additional commentary.`;
                 <Send className="h-6 w-6" />
                 Generated Email
               </h2>
-              {generatedEmail && (
-                <button
-                  onClick={copyToClipboard}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
-                    copySuccess
-                      ? 'bg-green-500/50 text-green-100'
-                      : 'bg-white/20 hover:bg-white/30 text-white'
-                  }`}
-                >
-                  <Copy className="h-4 w-4" />
-                  {copySuccess ? 'Copied!' : 'Copy'}
-                </button>
-              )}
+              <div className="flex gap-2">
+                {generatedEmail && (
+                  <>
+                    <button
+                      onClick={copyToClipboard}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                        copySuccess
+                          ? 'bg-green-500/50 text-green-100'
+                          : 'bg-white/20 hover:bg-white/30 text-white'
+                      }`}
+                    >
+                      <Copy className="h-4 w-4" />
+                      {copySuccess ? 'Copied!' : 'Copy'}
+                    </button>
+                    <button
+                      onClick={openEmailSender}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white transition-all duration-300"
+                    >
+                      <Send className="h-4 w-4" />
+                      Send Email
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 min-h-[400px]">
@@ -443,7 +435,7 @@ Return only the email content without any additional commentary.`;
                   <div className="text-center">
                     <Mail className="h-16 w-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg">Your generated email will appear here</p>
-                    <p className="text-sm opacity-75">Fill in the details and click "Generate Email"</p>
+                    <p className="text-sm opacity-75">Select an AI provider, fill in the details and click "Generate Email"</p>
                   </div>
                 </div>
               )}
@@ -454,13 +446,13 @@ Return only the email content without any additional commentary.`;
         {/* Footer */}
         <div className="text-center mt-12">
           <p className="text-purple-200 text-sm">
-            Powered by QWEN-Max AI via AIML API • 
-            <a href="https://aimlapi.com" target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-white ml-1">
+            Powered by {AI_PROVIDER_INFO[selectedProvider].name} • 
+            <a href={AI_PROVIDER_INFO[selectedProvider].website} target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-white ml-1">
               Get your API key
             </a>
           </p>
           <p className="text-purple-300 text-xs mt-2">
-            Using qwen-max model for high-quality email generation
+            Multi-AI email generation with professional quality results
           </p>
         </div>
       </div>
