@@ -12,6 +12,7 @@ const EmailWriter = () => {
     rawThoughts: '',
     tone: 'professional',
     recipient: '',
+    senderName: '',
     subject: '',
     context: '',
     replyingTo: '',
@@ -29,7 +30,10 @@ const EmailWriter = () => {
     [AI_PROVIDERS.GEMINI]: ''
   });
   
-  const [generatedEmail, setGeneratedEmail] = useState('');
+  const [generatedEmail, setGeneratedEmail] = useState({
+    subject: '',
+    body: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -113,6 +117,8 @@ const EmailWriter = () => {
       const emailService = new EmailGenerationService(selectedProvider, currentApiKey);
       const prompt = createPrompt(formData);
       const result = await emailService.generateEmail(prompt);
+      
+      // Result contains { subject: "...", body: "..." }
       setGeneratedEmail(result);
     } catch (error) {
       console.error('Error generating email:', error);
@@ -121,10 +127,10 @@ const EmailWriter = () => {
       setIsLoading(false);
     }
   };
-
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(generatedEmail);
+      const fullEmail = `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`;
+      await navigator.clipboard.writeText(fullEmail);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
@@ -133,7 +139,7 @@ const EmailWriter = () => {
   };
 
   const openEmailSender = () => {
-    if (!generatedEmail) {
+    if (!generatedEmail.subject || !generatedEmail.body) {
       alert('Please generate an email first before sending');
       return;
     }
@@ -143,7 +149,8 @@ const EmailWriter = () => {
   if (showEmailSender) {
     return (
       <EmailSender 
-        generatedEmail={generatedEmail}
+        subject={generatedEmail.subject}
+        body={generatedEmail.body}
         onBack={() => setShowEmailSender(false)}
       />
     );
@@ -241,6 +248,21 @@ const EmailWriter = () => {
                   value={formData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
                   placeholder="e.g., Project update, Meeting request, Follow-up"
+                  className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                />
+              </div>
+
+              {/* Sender Name */}
+              <div>
+                <label className="block text-purple-100 text-sm font-medium mb-3">
+                  <User className="h-4 w-4 inline mr-1" />
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.senderName}
+                  onChange={(e) => handleInputChange('senderName', e.target.value)}
+                  placeholder="e.g., John Doe, Sarah Johnson"
                   className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
                 />
               </div>
@@ -400,7 +422,7 @@ const EmailWriter = () => {
                 Generated Email
               </h2>
               <div className="flex gap-2">
-                {generatedEmail && (
+                {(generatedEmail.subject || generatedEmail.body) && (
                   <>
                     <button
                       onClick={copyToClipboard}
@@ -426,9 +448,20 @@ const EmailWriter = () => {
             </div>
 
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 min-h-[400px]">
-              {generatedEmail ? (
-                <div className="text-white whitespace-pre-wrap leading-relaxed">
-                  {generatedEmail}
+              {generatedEmail.subject || generatedEmail.body ? (
+                <div className="text-white space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-purple-200 mb-2">Subject:</h3>
+                    <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                      {generatedEmail.subject}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-purple-200 mb-2">Email Body:</h3>
+                    <div className="bg-white/10 rounded-lg p-3 border border-white/20 whitespace-pre-wrap leading-relaxed">
+                      {generatedEmail.body}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-purple-200">

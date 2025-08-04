@@ -8,17 +8,51 @@ export class EmailGenerationService {
   }
 
   async generateEmail(prompt) {
+    let response;
+    
     switch (this.provider) {
       case AI_PROVIDERS.QWEN:
-        return this.generateWithQwen(prompt);
+        response = await this.generateWithQwen(prompt);
+        break;
       case AI_PROVIDERS.OPENAI:
-        return this.generateWithOpenAI(prompt);
+        response = await this.generateWithOpenAI(prompt);
+        break;
       case AI_PROVIDERS.DEEPSEEK:
-        return this.generateWithDeepSeek(prompt);
+        response = await this.generateWithDeepSeek(prompt);
+        break;
       case AI_PROVIDERS.GEMINI:
-        return this.generateWithGemini(prompt);
+        response = await this.generateWithGemini(prompt);
+        break;
       default:
         throw new Error(`Unsupported AI provider: ${this.provider}`);
+    }
+
+    // Parse JSON response
+    try {
+      const jsonResponse = JSON.parse(response);
+      if (!jsonResponse.subject || !jsonResponse.body) {
+        throw new Error('Invalid response format: missing subject or body');
+      }
+      return jsonResponse;
+    } catch (parseError) {
+      // Fallback: try to extract JSON from response if it's wrapped in other text
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const jsonResponse = JSON.parse(jsonMatch[0]);
+          if (jsonResponse.subject && jsonResponse.body) {
+            return jsonResponse;
+          }
+        } catch (e) {
+          // Continue to error below
+        }
+      }
+      
+      // If JSON parsing fails, return a structured object anyway
+      return {
+        subject: formData.subject || 'Email Subject',
+        body: response
+      };
     }
   }
 
@@ -154,13 +188,14 @@ export class EmailGenerationService {
 }
 
 export const createPrompt = (formData) => {
-  return `Transform the following raw thoughts into a well-written email:
+  return `Transform the following raw thoughts into a well-written email and return the response as a JSON object with "subject" and "body" fields:
 
 Raw thoughts: ${formData.rawThoughts}
 
 Email Details:
 - Tone: ${formData.tone}
 - Recipient: ${formData.recipient || 'Not specified'}
+- Sender's Name: ${formData.senderName || 'Not specified'}
 - Subject context: ${formData.subject || 'Not specified'}
 - Relationship: ${formData.relationship}
 - Purpose: ${formData.purpose}
@@ -169,7 +204,13 @@ Email Details:
 - Additional context: ${formData.context || 'None'}
 ${formData.replyingTo ? `- Replying to this email: ${formData.replyingTo}` : ''}
 
-Please write a ${formData.tone} email that is ${formData.length} in length. Make it appropriate for the relationship type (${formData.relationship}) and purpose (${formData.purpose}). ${formData.priority === 'urgent' ? 'This is urgent, so make that clear.' : ''} ${formData.priority === 'high' ? 'This has high priority.' : ''}
+Please write a ${formData.tone} email that is ${formData.length} in length. Make it appropriate for the relationship type (${formData.relationship}) and purpose (${formData.purpose}). ${formData.priority === 'urgent' ? 'This is urgent, so make that clear.' : ''} ${formData.priority === 'high' ? 'This has high priority.' : ''}. Write the Sender's Name as given as ${formData.senderName}
 
-Return only the email content without any additional commentary.`;
+Return ONLY a valid JSON object in this exact format:
+{
+  "subject": "Your email subject here",
+  "body": "Your email body content here"
+}
+
+Do not include any additional text, explanations, or formatting outside of the JSON object.`;
 };

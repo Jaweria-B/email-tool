@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download } from 'lucide-react';
 
-const EmailSender = ({ generatedEmail, onBack }) => {
+const EmailSender = ({ subject, body, onBack }) => {
   const [emailList, setEmailList] = useState(['']);
   const [emailConfig, setEmailConfig] = useState({
     fromEmail: 'bjaweria509@gmail.com',
     fromPassword: 'gwow fpxo tlll igin',
-    subject: 'Collaboration Opportunity'
+    subject: subject || 'Collaboration Opportunity'
   });
   const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState([]);
   const [showConfig, setShowConfig] = useState(false);
   const [bulkEmailText, setBulkEmailText] = useState('');
   const [showBulkImport, setShowBulkImport] = useState(false);
+
+  // Update subject when prop changes
+  useEffect(() => {
+    if (subject) {
+      setEmailConfig(prev => ({ ...prev, subject }));
+    }
+  }, [subject]);
 
   const addEmailField = () => {
     setEmailList([...emailList, '']);
@@ -53,7 +60,7 @@ const EmailSender = ({ generatedEmail, onBack }) => {
       return;
     }
 
-    if (!generatedEmail) {
+    if (!body) {
       alert('No email content to send. Please generate an email first.');
       return;
     }
@@ -71,7 +78,7 @@ const EmailSender = ({ generatedEmail, onBack }) => {
         body: JSON.stringify({
           emails: validEmails,
           subject: emailConfig.subject,
-          body: generatedEmail,
+          body: body,
           fromEmail: emailConfig.fromEmail,
           fromPassword: emailConfig.fromPassword
         }),
@@ -301,7 +308,7 @@ const EmailSender = ({ generatedEmail, onBack }) => {
               <div className="border-t border-white/20 pt-4">
                 <div className="text-purple-200 text-sm mb-2">Email Body:</div>
                 <div className="text-white text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-                  {generatedEmail || 'No email content available. Please generate an email first.'}
+                  {body || 'No email content available. Please generate an email first.'}
                 </div>
               </div>
             </div>
