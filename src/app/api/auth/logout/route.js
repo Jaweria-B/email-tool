@@ -1,14 +1,14 @@
-
-// app/api/auth/logout/route.js
+//  app/api/auth/logout/route.js
 import { NextResponse } from 'next/server';
-import { userDb, sessionDb } from '@/lib/database';
+import { sessionDb } from '@/lib/database';
 
 export async function POST(request) {
   try {
     const sessionToken = request.cookies.get('session_token')?.value;
     
     if (sessionToken) {
-      sessionDb.delete(sessionToken);
+      // Delete session (now async)
+      await sessionDb.delete(sessionToken);
     }
 
     const response = NextResponse.json({ success: true });
@@ -20,4 +20,3 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

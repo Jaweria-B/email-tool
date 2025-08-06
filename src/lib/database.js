@@ -1,227 +1,216 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import { sql } from '@vercel/postgres';
 import crypto from 'crypto';
 
-const dbPath = path.join(process.cwd(), 'data', 'emailcraft.db');
-const schemaPath = path.join(process.cwd(), 'schema.sql');
-
-// Ensure data directory exists
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Initialize database
-const db = new Database(dbPath);
-
-// Initialize schema
-const initializeSchema = () => {
-  const createTables = `
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      company TEXT,
-      job_title TEXT,
-      status TEXT DEFAULT 'active',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS user_sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      session_token TEXT UNIQUE NOT NULL,
-      expires_at DATETIME NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS email_activity (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      email_subject TEXT,
-      email_body TEXT,
-      recipient TEXT,
-      tone TEXT,
-      ai_provider TEXT,
-      purpose TEXT,
-      priority TEXT,
-      status TEXT DEFAULT 'generated',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS user_api_keys (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      provider TEXT NOT NULL,
-      api_key TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-      UNIQUE(user_id, provider)
-    );
-  `;
-
+// Initialize database tables
+const initializeSchema = async () => {
   try {
-    db.exec(createTables);
+    // Create users table
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        company TEXT,
+        job_title TEXT,
+        status TEXT DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Create user_sessions table
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        session_token TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Create email_activity table
+    await sql`
+      CREATE TABLE IF NOT EXISTS email_activity (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        email_subject TEXT,
+        email_body TEXT,
+        recipient TEXT,
+        tone TEXT,
+        ai_provider TEXT,
+        purpose TEXT,
+        priority TEXT,
+        status TEXT DEFAULT 'generated',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Create user_api_keys table
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_api_keys (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        provider TEXT NOT NULL,
+        api_key TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        UNIQUE(user_id, provider)
+      )
+    `;
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database tables:', error);
-    throw error;
   }
 };
 
-// Initialize the schema
+// Initialize schema on import
 initializeSchema();
 
 // User operations
 export const userDb = {
   // Create user
-  create: (userData) => {
-    const stmt = db.prepare(`
+  create: async (userData) => {
+    const result = await sql`
       INSERT INTO users (name, email, company, job_title, status)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    return stmt.run(userData.name, userData.email, userData.company, userData.job_title, 'active');
+      VALUES (${userData.name}, ${userData.email}, ${userData.company}, ${userData.job_title}, 'active')
+      RETURNING id
+    `;
+    return { lastInsertRowid: result.rows[0].id };
   },
 
   // Find user by email
-  findByEmail: (email) => {
-    const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
-    return stmt.get(email);
+  findByEmail: async (email) => {
+    const result = await sql`SELECT * FROM users WHERE email = ${email}`;
+    return result.rows[0] || null;
   },
 
   // Find user by ID
-  findById: (id) => {
-    const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
-    return stmt.get(id);
+  findById: async (id) => {
+    const result = await sql`SELECT * FROM users WHERE id = ${id}`;
+    return result.rows[0] || null;
   },
 
   // Update user
-  update: (id, userData) => {
-    const stmt = db.prepare(`
+  update: async (id, userData) => {
+    const result = await sql`
       UPDATE users 
-      SET name = ?, company = ?, job_title = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-    return stmt.run(userData.name, userData.company, userData.job_title, id);
+      SET name = ${userData.name}, company = ${userData.company}, job_title = ${userData.job_title}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+    `;
+    return result;
   }
 };
 
 // Session operations
 export const sessionDb = {
   // Create session
-  create: (userId) => {
+  create: async (userId) => {
     const sessionToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     
-    const stmt = db.prepare(`
+    await sql`
       INSERT INTO user_sessions (user_id, session_token, expires_at)
-      VALUES (?, ?, ?)
-    `);
+      VALUES (${userId}, ${sessionToken}, ${expiresAt.toISOString()})
+    `;
     
-    stmt.run(userId, sessionToken, expiresAt.toISOString());
     return sessionToken;
   },
 
   // Find valid session
-  findValid: (sessionToken) => {
-    const stmt = db.prepare(`
+  findValid: async (sessionToken) => {
+    const result = await sql`
       SELECT us.*, u.* FROM user_sessions us
       JOIN users u ON us.user_id = u.id
-      WHERE us.session_token = ? AND us.expires_at > datetime('now')
-    `);
-    return stmt.get(sessionToken);
+      WHERE us.session_token = ${sessionToken} AND us.expires_at > NOW()
+    `;
+    return result.rows[0] || null;
   },
 
   // Delete session
-  delete: (sessionToken) => {
-    const stmt = db.prepare('DELETE FROM user_sessions WHERE session_token = ?');
-    return stmt.run(sessionToken);
+  delete: async (sessionToken) => {
+    const result = await sql`DELETE FROM user_sessions WHERE session_token = ${sessionToken}`;
+    return result;
   },
 
   // Clean expired sessions
-  cleanExpired: () => {
-    const stmt = db.prepare('DELETE FROM user_sessions WHERE expires_at <= datetime("now")');
-    return stmt.run();
+  cleanExpired: async () => {
+    const result = await sql`DELETE FROM user_sessions WHERE expires_at <= NOW()`;
+    return result;
   }
 };
 
 // Email activity operations
 export const emailActivityDb = {
   // Log email activity
-  create: (userId, emailData) => {
-    const stmt = db.prepare(`
+  create: async (userId, emailData) => {
+    const result = await sql`
       INSERT INTO email_activity 
       (user_id, email_subject, email_body, recipient, tone, ai_provider, purpose, priority, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    return stmt.run(
-      userId,
-      emailData.subject,
-      emailData.body,
-      emailData.recipient,
-      emailData.tone,
-      emailData.ai_provider,
-      emailData.purpose,
-      emailData.priority,
-      emailData.status || 'generated'
-    );
+      VALUES (${userId}, ${emailData.subject}, ${emailData.body}, ${emailData.recipient}, ${emailData.tone}, ${emailData.ai_provider}, ${emailData.purpose}, ${emailData.priority}, ${emailData.status || 'generated'})
+    `;
+    return result;
   },
 
   // Get user's email history
-  getByUser: (userId, limit = 50) => {
-    const stmt = db.prepare(`
+  getByUser: async (userId, limit = 50) => {
+    const result = await sql`
       SELECT * FROM email_activity 
-      WHERE user_id = ? 
+      WHERE user_id = ${userId}
       ORDER BY created_at DESC 
-      LIMIT ?
-    `);
-    return stmt.all(userId, limit);
+      LIMIT ${limit}
+    `;
+    return result.rows;
   },
 
   // Update email status
-  updateStatus: (id, status) => {
-    const stmt = db.prepare('UPDATE email_activity SET status = ? WHERE id = ?');
-    return stmt.run(status, id);
+  updateStatus: async (id, status) => {
+    const result = await sql`UPDATE email_activity SET status = ${status} WHERE id = ${id}`;
+    return result;
   }
 };
 
-// API Keys operations (basic - should be encrypted in production)
+// API Keys operations
 export const apiKeysDb = {
-  // Save API key
-  upsert: (userId, provider, apiKey) => {
-    const stmt = db.prepare(`
-      INSERT INTO user_api_keys (user_id, provider, api_key)
-      VALUES (?, ?, ?)
-      ON CONFLICT(user_id, provider) 
-      DO UPDATE SET api_key = ?, updated_at = CURRENT_TIMESTAMP
-    `);
-    return stmt.run(userId, provider, apiKey, apiKey);
+  // Save API key (upsert)
+  upsert: async (userId, provider, apiKey) => {
+    // First try to update
+    const updateResult = await sql`
+      UPDATE user_api_keys 
+      SET api_key = ${apiKey}, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ${userId} AND provider = ${provider}
+    `;
+    
+    // If no rows affected, insert new record
+    if (updateResult.rowCount === 0) {
+      await sql`
+        INSERT INTO user_api_keys (user_id, provider, api_key)
+        VALUES (${userId}, ${provider}, ${apiKey})
+      `;
+    }
+    
+    return updateResult;
   },
 
   // Get user's API keys
-  getByUser: (userId) => {
-    const stmt = db.prepare('SELECT provider, api_key FROM user_api_keys WHERE user_id = ?');
-    const results = stmt.all(userId);
+  getByUser: async (userId) => {
+    const result = await sql`SELECT provider, api_key FROM user_api_keys WHERE user_id = ${userId}`;
     
     // Convert to object format
     const apiKeys = {};
-    results.forEach(row => {
+    result.rows.forEach(row => {
       apiKeys[row.provider] = row.api_key;
     });
     return apiKeys;
   },
 
   // Delete API key
-  delete: (userId, provider) => {
-    const stmt = db.prepare('DELETE FROM user_api_keys WHERE user_id = ? AND provider = ?');
-    return stmt.run(userId, provider);
+  delete: async (userId, provider) => {
+    const result = await sql`DELETE FROM user_api_keys WHERE user_id = ${userId} AND provider = ${provider}`;
+    return result;
   }
 };
-
-export default db;

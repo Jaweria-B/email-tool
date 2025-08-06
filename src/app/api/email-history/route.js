@@ -1,3 +1,4 @@
+// app/api/email-history/route.js
 import { NextResponse } from 'next/server';
 import { sessionDb, emailActivityDb } from '@/lib/database';
 
@@ -9,14 +10,15 @@ export async function GET(request) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const session = sessionDb.findValid(sessionToken);
+    // Find session (now async)
+    const session = await sessionDb.findValid(sessionToken);
     
     if (!session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Get user's email history
-    const emails = emailActivityDb.getByUser(session.id);
+    // Get user's email history (now async)
+    const emails = await emailActivityDb.getByUser(session.id);
 
     return NextResponse.json({ emails });
   } catch (error) {
@@ -33,7 +35,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const session = sessionDb.findValid(sessionToken);
+    // Find session (now async)
+    const session = await sessionDb.findValid(sessionToken);
     
     if (!session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -41,12 +44,12 @@ export async function POST(request) {
 
     const emailData = await request.json();
     
-    // Save email activity
-    const result = emailActivityDb.create(session.id, emailData);
+    // Save email activity (now async)
+    const result = await emailActivityDb.create(session.id, emailData);
 
     return NextResponse.json({ 
       success: true, 
-      emailId: result.lastInsertRowid 
+      emailId: result.insertId || result.rows?.[0]?.id || 'created'
     });
   } catch (error) {
     console.error('Save email activity error:', error);

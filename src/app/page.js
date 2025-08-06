@@ -12,6 +12,7 @@ import { useEffect, useCallback  } from 'react';
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -35,9 +36,10 @@ const EmailWriter = () => {
         const data = await response.json();
         setUser(data.user);
       }
-      // Don't redirect here - middleware handles auth
     } catch (error) {
       console.error('Failed to load user data:', error);
+    } finally {
+      setIsLoadingUser(false); // Set loading to false regardless of success/failure
     }
   };
 
@@ -123,6 +125,14 @@ const EmailWriter = () => {
   };
 
   const generateEmail = async () => {
+    // Check if user is authenticated before generating email
+    if (!user) {
+      if (confirm('You need to sign in to generate emails. Would you like to sign in now?')) {
+        router.push('/login');
+      }
+      return;
+    }
+
     const currentApiKey = apiKeys[selectedProvider];
     
     if (!currentApiKey) {
@@ -154,6 +164,7 @@ const EmailWriter = () => {
       setIsLoading(false);
     }
   };
+
   const copyToClipboard = async () => {
     try {
       const fullEmail = `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`;
@@ -173,7 +184,6 @@ const EmailWriter = () => {
     setShowEmailSender(true);
   };
 
-  
   const saveEmailActivity = async (emailData) => {
     try {
       await fetch('/api/email-history', {
@@ -198,7 +208,8 @@ const EmailWriter = () => {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
+      setUser(null); // Clear user state
+      router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -221,7 +232,7 @@ const EmailWriter = () => {
         <div className="text-center mb-12">
           {/* Profile/Auth Section - Top Right */}
           <div className="fixed top-6 right-6 z-50">
-            {user ? (
+            {!isLoadingUser && user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowProfile(!showProfile)}
@@ -259,7 +270,7 @@ const EmailWriter = () => {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : !isLoadingUser ? (
               <div className="flex gap-3">
                 <button
                   onClick={() => router.push('/login')}
@@ -276,8 +287,18 @@ const EmailWriter = () => {
                   Register
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
+
+          {/* Authentication Notice for Non-logged Users */}
+          {!isLoadingUser && !user && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-4 mb-8 max-w-2xl mx-auto">
+              <div className="text-purple-100 text-sm">
+                <User className="h-4 w-4 inline mr-2" />
+                <span className="font-medium">Sign in required:</span> You'll need to create an account or sign in to generate emails and save your work.
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-center mb-6">
             <div className="bg-white/20 backdrop-blur-lg rounded-full p-4 border border-white/30">
@@ -311,7 +332,6 @@ const EmailWriter = () => {
             </div>
           )}
         </div>
-
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Input Section */}
@@ -527,6 +547,7 @@ const EmailWriter = () => {
                   <>
                     <Sparkles className="h-5 w-5" />
                     Generate Email with {AI_PROVIDER_INFO[selectedProvider].name}
+                    {!user && <span className="text-xs opacity-75">(Sign in required)</span>}
                   </>
                 )}
               </button>

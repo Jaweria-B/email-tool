@@ -1,3 +1,4 @@
+//  app/api/user-api-keys/route.js
 import { NextResponse } from 'next/server';
 import { sessionDb, apiKeysDb } from '@/lib/database';
 
@@ -9,14 +10,15 @@ export async function GET(request) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const session = sessionDb.findValid(sessionToken);
+    // Find session (now async)
+    const session = await sessionDb.findValid(sessionToken);
     
     if (!session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Get user's API keys
-    const apiKeys = apiKeysDb.getByUser(session.id);
+    // Get user's API keys (now async)
+    const apiKeys = await apiKeysDb.getByUser(session.id);
 
     return NextResponse.json({ apiKeys });
   } catch (error) {
@@ -33,7 +35,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const session = sessionDb.findValid(sessionToken);
+    // Find session (now async)
+    const session = await sessionDb.findValid(sessionToken);
     
     if (!session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -45,8 +48,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Provider and API key are required' }, { status: 400 });
     }
 
-    // Save/update API key
-    apiKeysDb.upsert(session.id, provider, apiKey);
+    // Save/update API key (now async)
+    await apiKeysDb.upsert(session.id, provider, apiKey);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -63,7 +66,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const session = sessionDb.findValid(sessionToken);
+    // Find session (now async)
+    const session = await sessionDb.findValid(sessionToken);
     
     if (!session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -75,8 +79,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Provider is required' }, { status: 400 });
     }
 
-    // Delete API key
-    apiKeysDb.delete(session.id, provider);
+    // Delete API key (now async)
+    await apiKeysDb.delete(session.id, provider);
 
     return NextResponse.json({ success: true });
   } catch (error) {

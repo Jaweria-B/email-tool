@@ -11,18 +11,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
     }
 
-    // Check if user already exists
-    const existingUser = userDb.findByEmail(email);
+    // Check if user already exists (now async)
+    const existingUser = await userDb.findByEmail(email);
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     }
 
-    // Create user
-    const result = userDb.create({ name, email, company, job_title });
-    const user = userDb.findById(result.lastInsertRowid);
+    // Create user (now async)
+    const result = await userDb.create({ name, email, company, job_title });
+    const user = await userDb.findById(result.lastInsertRowid);
 
-    // Create session
-    const sessionToken = sessionDb.create(user.id);
+    // Create session (now async)
+    const sessionToken = await sessionDb.create(user.id);
 
     // Set cookie and return response
     const response = NextResponse.json({ 

@@ -10,15 +10,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Find user
-    let user = userDb.findByEmail(email);
+    // Find user (now async)
+    const user = await userDb.findByEmail(email);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Create session
-    const sessionToken = sessionDb.create(user.id);
+    // Create session (now async)
+    const sessionToken = await sessionDb.create(user.id);
 
     // Set cookie
     const response = NextResponse.json({ 
@@ -45,4 +45,3 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
