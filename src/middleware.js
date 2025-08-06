@@ -4,17 +4,30 @@ export function middleware(request) {
   // Get session token from cookie
   const sessionToken = request.cookies.get('session_token')?.value;
   
-  // Define protected routes
-  const protectedRoutes = ['/dashboard', '/profile', '/'];
+  // Define protected routes - REMOVED '/' from here
+  const protectedRoutes = ['/dashboard', '/profile'];
   const authRoutes = ['/login', '/register'];
   
+  const pathname = request.nextUrl.pathname;
+  
   const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
+    pathname.startsWith(route)
   );
   
   const isAuthRoute = authRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
+    pathname.startsWith(route)
   );
+
+  // Handle root route separately
+  if (pathname === '/') {
+    if (sessionToken) {
+      // Authenticated users go to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    } else {
+      // Unauthenticated users go to login
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
 
   // If accessing protected route without session, redirect to login
   if (isProtectedRoute && !sessionToken) {
@@ -31,6 +44,11 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon|.*\\.png$).*)',
+    // Only match the routes you actually want to protect
+    '/',
+    '/dashboard/:path*',
+    '/profile/:path*', 
+    '/login',
+    '/register'
   ],
 };

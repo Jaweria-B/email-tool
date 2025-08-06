@@ -28,23 +28,22 @@ const EmailWriter = () => {
     length: 'medium'
   });
   
-  const checkAuth = async () => {
+  const loadUserData = async () => {
     try {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-      } else {
-        router.push('/login');
       }
+      // Don't redirect here - middleware handles auth
     } catch (error) {
-      console.error('Auth check failed:', error);
-      router.push('/login');
+      console.error('Failed to load user data:', error);
     }
   };
 
+  // Load user data on mount, but don't redirect
   useEffect(() => {
-    checkAuth();
+    loadUserData();
   }, []);
 
   const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.QWEN);
