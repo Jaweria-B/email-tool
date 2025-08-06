@@ -7,7 +7,7 @@ import ProviderSelector from '../components/ProviderSelector';
 import ApiSettings from '../components/ApiSettings';
 import EmailSender from '../components/EmailSender';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useCallback  } from 'react';
 
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
@@ -28,6 +28,25 @@ const EmailWriter = () => {
     length: 'medium'
   });
   
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/login');
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.QWEN);
   const [apiKeys, setApiKeys] = useState({
     [AI_PROVIDERS.QWEN]: '',
@@ -155,16 +174,7 @@ const EmailWriter = () => {
     setShowEmailSender(true);
   };
 
-  if (showEmailSender) {
-    return (
-      <EmailSender 
-        subject={generatedEmail.subject}
-        body={generatedEmail.body}
-        onBack={() => setShowEmailSender(false)}
-      />
-    );
-  }
-
+  
   const saveEmailActivity = async (emailData) => {
     try {
       await fetch('/api/email-history', {
@@ -186,22 +196,6 @@ const EmailWriter = () => {
     }
   };
 
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        router.push('/login');
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      router.push('/login');
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -211,11 +205,15 @@ const EmailWriter = () => {
     }
   };
 
-
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  if (showEmailSender) {
+    return (
+      <EmailSender 
+        subject={generatedEmail.subject}
+        body={generatedEmail.body}
+        onBack={() => setShowEmailSender(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
