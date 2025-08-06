@@ -1,5 +1,9 @@
-import { sql } from '@vercel/postgres';
+// lib/database.js
+import { neon } from '@neondatabase/serverless';
 import crypto from 'crypto';
+
+// Initialize connection
+const sql = neon(process.env.DATABASE_URL);
 
 // Initialize database tables
 const initializeSchema = async () => {
@@ -68,8 +72,8 @@ const initializeSchema = async () => {
   }
 };
 
-// Initialize schema on import
-initializeSchema();
+// Comment this out for now - run manually first
+// initializeSchema();
 
 // User operations
 export const userDb = {
@@ -80,19 +84,19 @@ export const userDb = {
       VALUES (${userData.name}, ${userData.email}, ${userData.company}, ${userData.job_title}, 'active')
       RETURNING id
     `;
-    return { lastInsertRowid: result.rows[0].id };
+    return { lastInsertRowid: result[0].id };
   },
 
   // Find user by email
   findByEmail: async (email) => {
     const result = await sql`SELECT * FROM users WHERE email = ${email}`;
-    return result.rows[0] || null;
+    return result[0] || null;
   },
 
   // Find user by ID
   findById: async (id) => {
     const result = await sql`SELECT * FROM users WHERE id = ${id}`;
-    return result.rows[0] || null;
+    return result[0] || null;
   },
 
   // Update user
@@ -128,7 +132,7 @@ export const sessionDb = {
       JOIN users u ON us.user_id = u.id
       WHERE us.session_token = ${sessionToken} AND us.expires_at > NOW()
     `;
-    return result.rows[0] || null;
+    return result[0] || null;
   },
 
   // Delete session
@@ -164,7 +168,7 @@ export const emailActivityDb = {
       ORDER BY created_at DESC 
       LIMIT ${limit}
     `;
-    return result.rows;
+    return result;
   },
 
   // Update email status
@@ -178,22 +182,28 @@ export const emailActivityDb = {
 export const apiKeysDb = {
   // Save API key (upsert)
   upsert: async (userId, provider, apiKey) => {
-    // First try to update
-    const updateResult = await sql`
-      UPDATE user_api_keys 
-      SET api_key = ${apiKey}, updated_at = CURRENT_TIMESTAMP
+    // Check if exists first
+    const existing = await sql`
+      SELECT id FROM user_api_keys 
       WHERE user_id = ${userId} AND provider = ${provider}
     `;
     
-    // If no rows affected, insert new record
-    if (updateResult.rowCount === 0) {
+    if (existing.length > 0) {
+      // Update existing
+      await sql`
+        UPDATE user_api_keys 
+        SET api_key = ${apiKey}, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ${userId} AND provider = ${provider}
+      `;
+    } else {
+      // Insert new
       await sql`
         INSERT INTO user_api_keys (user_id, provider, api_key)
         VALUES (${userId}, ${provider}, ${apiKey})
       `;
     }
     
-    return updateResult;
+    return { success: true };
   },
 
   // Get user's API keys
@@ -202,7 +212,7 @@ export const apiKeysDb = {
     
     // Convert to object format
     const apiKeys = {};
-    result.rows.forEach(row => {
+    result.forEach(row => {
       apiKeys[row.provider] = row.api_key;
     });
     return apiKeys;
@@ -214,3 +224,6 @@ export const apiKeysDb = {
     return result;
   }
 };
+
+// Export the schema initializer for manual use
+export { initializeSchema };

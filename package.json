@@ -13,6 +13,7 @@
     "email": "bjaweria509@gmail.com"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
     "@vercel/postgres": "^0.10.0",
     "better-sqlite3": "^12.2.0",
     "lucide-react": "^0.525.0",
