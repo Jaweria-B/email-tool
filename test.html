@@ -1,0 +1,1417 @@
+
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Forms - WEFIT Dashboard</title>
+    <meta
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+      name="viewport"
+    />
+    <link
+      rel="icon"
+      href="../assets/img/kaiadmin/favicon.ico"
+      type="image/x-icon"
+    />
+
+    <style>
+input.is-invalid {
+  border-color: red;
+  background-color: #ffe6e6;
+}
+</style>
+
+    <!-- Fonts and icons -->
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../assets/css/plugins.min.css" />
+    <link rel="stylesheet" href="../assets/css/kaiadmin.min.css" />
+
+    <!-- CSS Just for demo purpose, don't include it in your project -->
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- Sidebar -->
+      <div class="sidebar" data-background-color="dark">
+        <div class="sidebar-logo">
+          <!-- Logo Header -->
+          <div class="logo-header" data-background-color="dark">
+            <a href="../index.html" class="logo">
+              <img
+                src="../assets/img/wefit.png"
+                alt="navbar brand"
+                class="navbar-brand"
+                height="70"
+              />
+            </a>
+            <div class="nav-toggle">
+              <button class="btn btn-toggle toggle-sidebar">
+                <i class="gg-menu-right"></i>
+              </button>
+              <button class="btn btn-toggle sidenav-toggler">
+                <i class="gg-menu-left"></i>
+              </button>
+            </div>
+            <button class="topbar-toggler more">
+              <i class="gg-more-vertical-alt"></i>
+            </button>
+          </div>
+          <!-- End Logo Header -->
+        </div>
+        <div class="sidebar-wrapper scrollbar scrollbar-inner">
+          <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+              <li class="nav-item">
+                <a
+                  data-bs-toggle="collapse"
+                  href="#dashboard"
+                  class="collapsed"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-home"></i>
+                  <p>Dashboard</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse" id="dashboard">
+                  <ul class="nav nav-collapse">
+                    <li>
+                      <a href="../../demo1/index.html">
+                        <span class="sub-item">Dashboard 1</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-section">
+                <span class="sidebar-mini-icon">
+                  <i class="fa fa-ellipsis-h"></i>
+                </span>
+                <h4 class="text-section">Components</h4>
+              </li>
+              <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#report">
+                  <i class="fas fa-layer-group"></i>
+                  <p>Reports</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse" id="report">
+                  <ul class="nav nav-collapse">
+                    <li>
+                      <a href="forms/dailyform.html">
+                        <span class="sub-item">Daily Reports</span>
+                      </a>
+                    </li>
+              
+                  </ul>
+                </div>
+              </li>
+             
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- End Sidebar -->
+
+      <div class="main-panel">
+        <div class="main-header">
+          <div class="main-header-logo">
+            <!-- Logo Header -->
+            <div class="logo-header" data-background-color="dark">
+              <a href="../index.html" class="logo">
+                <img
+                  src="../assets/img/kaiadmin/logo_light.svg"
+                  alt="navbar brand"
+                  class="navbar-brand"
+                />
+              </a>
+              <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                  <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                  <i class="gg-menu-left"></i>
+                </button>
+              </div>
+              <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+              </button>
+            </div>
+            <!-- End Logo Header -->
+          </div>
+          <!-- Navbar Header -->
+          <nav
+            class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom"
+          >
+            <div class="container-fluid">
+              <nav
+                class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex"
+              >
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <button type="submit" class="btn btn-search pe-1">
+                      <i class="fa fa-search search-icon"></i>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search ..."
+                    class="form-control"
+                  />
+                </div>
+              </nav>
+
+              <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <li
+                  class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none"
+                >
+                  <a
+                    class="nav-link dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <i class="fa fa-search"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-search animated fadeIn">
+                    <form class="navbar-left navbar-form nav-search">
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          placeholder="Search ..."
+                          class="form-control"
+                        />
+                      </div>
+                    </form>
+                  </ul>
+                </li>
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                  <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    id="messageDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="fa fa-envelope"></i>
+                  </a>
+                  <ul
+                    class="dropdown-menu messages-notif-box animated fadeIn"
+                    aria-labelledby="messageDropdown"
+                  >
+                    <li>
+                      <div
+                        class="dropdown-title d-flex justify-content-between align-items-center"
+                      >
+                        Messages
+                        <a href="#" class="small">Mark all as read</a>
+                      </div>
+                    </li>
+                    <li>
+                      <div class="message-notif-scroll scrollbar-outer">
+                        <div class="notif-center">
+                          <a href="#">
+                            <div class="notif-img">
+                              <img
+                                src="../assets/img/jm_denis.jpg"
+                                alt="Img Profile"
+                              />
+                            </div>
+                            <div class="notif-content">
+                              <span class="subject">Jimmy Denis</span>
+                              <span class="block"> How are you ? </span>
+                              <span class="time">5 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-img">
+                              <img
+                                src="../assets/img/chadengle.jpg"
+                                alt="Img Profile"
+                              />
+                            </div>
+                            <div class="notif-content">
+                              <span class="subject">Chad</span>
+                              <span class="block"> Ok, Thanks ! </span>
+                              <span class="time">12 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-img">
+                              <img
+                                src="../assets/img/mlane.jpg"
+                                alt="Img Profile"
+                              />
+                            </div>
+                            <div class="notif-content">
+                              <span class="subject">Jhon Doe</span>
+                              <span class="block">
+                                Ready for the meeting today...
+                              </span>
+                              <span class="time">12 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-img">
+                              <img
+                                src="../assets/img/talha.jpg"
+                                alt="Img Profile"
+                              />
+                            </div>
+                            <div class="notif-content">
+                              <span class="subject">Talha</span>
+                              <span class="block"> Hi, Apa Kabar ? </span>
+                              <span class="time">17 minutes ago</span>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="see-all" href="javascript:void(0);"
+                        >See all messages<i class="fa fa-angle-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                  <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    id="notifDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="fa fa-bell"></i>
+                    <span class="notification">4</span>
+                  </a>
+                  <ul
+                    class="dropdown-menu notif-box animated fadeIn"
+                    aria-labelledby="notifDropdown"
+                  >
+                    <li>
+                      <div class="dropdown-title">
+                        You have 4 new notification
+                      </div>
+                    </li>
+                    <li>
+                      <div class="notif-scroll scrollbar-outer">
+                        <div class="notif-center">
+                          <a href="#">
+                            <div class="notif-icon notif-primary">
+                              <i class="fa fa-user-plus"></i>
+                            </div>
+                            <div class="notif-content">
+                              <span class="block"> New user registered </span>
+                              <span class="time">5 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-icon notif-success">
+                              <i class="fa fa-comment"></i>
+                            </div>
+                            <div class="notif-content">
+                              <span class="block">
+                                Rahmad commented on Admin
+                              </span>
+                              <span class="time">12 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-img">
+                              <img
+                                src="../assets/img/profile2.jpg"
+                                alt="Img Profile"
+                              />
+                            </div>
+                            <div class="notif-content">
+                              <span class="block">
+                                Reza send messages to you
+                              </span>
+                              <span class="time">12 minutes ago</span>
+                            </div>
+                          </a>
+                          <a href="#">
+                            <div class="notif-icon notif-danger">
+                              <i class="fa fa-heart"></i>
+                            </div>
+                            <div class="notif-content">
+                              <span class="block"> Farrah liked Admin </span>
+                              <span class="time">17 minutes ago</span>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="see-all" href="javascript:void(0);"
+                        >See all notifications<i class="fa fa-angle-right"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                  <a
+                    class="nav-link"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    aria-expanded="false"
+                  >
+                    <i class="fas fa-layer-group"></i>
+                  </a>
+                  <div class="dropdown-menu quick-actions animated fadeIn">
+                    <div class="quick-actions-header">
+                      <span class="title mb-1">Quick Actions</span>
+                      <span class="subtitle op-7">Shortcuts</span>
+                    </div>
+                    <div class="quick-actions-scroll scrollbar-outer">
+                      <div class="quick-actions-items">
+                        <div class="row m-0">
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div class="avatar-item bg-danger rounded-circle">
+                                <i class="far fa-calendar-alt"></i>
+                              </div>
+                              <span class="text">Calendar</span>
+                            </div>
+                          </a>
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div
+                                class="avatar-item bg-warning rounded-circle"
+                              >
+                                <i class="fas fa-map"></i>
+                              </div>
+                              <span class="text">Maps</span>
+                            </div>
+                          </a>
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div class="avatar-item bg-info rounded-circle">
+                                <i class="fas fa-file-excel"></i>
+                              </div>
+                              <span class="text">Reports</span>
+                            </div>
+                          </a>
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div
+                                class="avatar-item bg-success rounded-circle"
+                              >
+                                <i class="fas fa-envelope"></i>
+                              </div>
+                              <span class="text">Emails</span>
+                            </div>
+                          </a>
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div
+                                class="avatar-item bg-primary rounded-circle"
+                              >
+                                <i class="fas fa-file-invoice-dollar"></i>
+                              </div>
+                              <span class="text">Invoice</span>
+                            </div>
+                          </a>
+                          <a class="col-6 col-md-4 p-0" href="#">
+                            <div class="quick-actions-item">
+                              <div
+                                class="avatar-item bg-secondary rounded-circle"
+                              >
+                                <i class="fas fa-credit-card"></i>
+                              </div>
+                              <span class="text">Payments</span>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+
+                <li class="nav-item topbar-user dropdown hidden-caret">
+                  <a
+                    class="dropdown-toggle profile-pic"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    aria-expanded="false"
+                  >
+                    <div class="avatar-sm">
+                      <img
+                        src="../assets/img/profile.jpg"
+                        alt="..."
+                        class="avatar-img rounded-circle"
+                      />
+                    </div>
+                    <span class="profile-username">
+                      <span class="op-7">Hi,</span>
+                      <span class="fw-bold">Maryam</span>
+                    </span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-user animated fadeIn">
+                    <div class="dropdown-user-scroll scrollbar-outer">
+                      <li>
+                        <div class="user-box">
+                          <div class="avatar-lg">
+                            <img
+                              src="../assets/img/profile.jpg"
+                              alt="image profile"
+                              class="avatar-img rounded"
+                            />
+                          </div>
+                          <div class="u-text">
+                            <h4>Maryam</h4>
+                            <p class="text-muted">hello@example.com</p>
+                            <a
+                              href="profile.html"
+                              class="btn btn-xs btn-secondary btn-sm"
+                              >View Profile</a
+                            >
+                          </div>
+                        </div>
+                      </li>
+                      <li>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">My Profile</a>
+                        <a class="dropdown-item" href="#">My Balance</a>
+                        <a class="dropdown-item" href="#">Inbox</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Account Setting</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Logout</a>
+                      </li>
+                    </div>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+          <!-- End Navbar -->
+        </div>
+
+        <div class="container">
+          <div class="page-inner">
+            <div class="page-header">
+              <h3 class="fw-bold mb-3">Forms</h3>
+              <ul class="breadcrumbs mb-3">
+                <li class="nav-home">
+                  <a href="#">
+                    <i class="icon-home"></i>
+                  </a>
+                </li>
+                <li class="separator">
+                  <i class="icon-arrow-right"></i>
+                </li>
+                <li class="nav-item">
+                  <a href="#">Forms</a>
+                </li>
+                <li class="separator">
+                  <i class="icon-arrow-right"></i>
+                </li>
+                <li class="nav-item">
+                  <a href="#">Daily Form</a>
+                </li>
+              </ul>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">Daily Form</div>
+                  </div>
+
+                   
+<form id="dailyForm" class="p-4">
+  <div class="mb-3">
+    <label for="projectName" class="form-label">Project Name</label>
+    <select class="form-select" id="projectName" name="projectName" required onchange="filterTaskNo()">
+      <option value="" disabled selected>Select Project Name</option>
+      <option>Damac</option>
+      <option>Springs</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="reportedBy" class="form-label">Reported By</label>
+    <select class="form-select" id="reportedBy" name="reportedBy">
+      <option value="" disabled selected>Select Reported By</option>
+      <option>Jasir</option>
+      <option>Ajin</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="taskNo" class="form-label">Task No</label>
+    <select class="form-select" id="taskNo" name="taskNo" required>
+      <option value="">Select Task</option>
+   
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="taskDescription" class="form-label">Task Description</label>
+    <textarea class="form-control" name="taskDescription" id="taskDescription" readonly></textarea>
+  </div>
+
+  <div class="row">
+  <div class="col-md-6 mb-3">
+    <label for="manhours" class="form-label">Budgeted Manhours</label>
+    <input type="number" class="form-control" id="manhours" name="manhours" readonly />
+  </div>
+
+  <div class="col-md-6 mb-3">
+    <label for="budget" class="form-label">Utilized Manhours</label>
+    <input type="number" class="form-control" id="budget" name="budget" readonly oninput="checkUtilization()" />
+  <div class="invalid-feedback" style="display: none;">
+  Utilized manhours exceed budgeted value!
+</div>
+</div>
+</div>
+
+  <div class="mb-3">
+    <label for="completion" class="form-label">Completion %</label>
+    <input type="number" min="0" max="100" class="form-control" id="completion" name="completion" placeholder="Enter Completion" />
+  </div>
+
+<div id="employeeSection">
+  <div class="employee-row row g-2 align-items-center mb-2">
+    <div class="col-md-6">
+      <label class="form-label">Employee Name</label>
+      <select class="form-select" name="employeeName[]" required>
+        <option value="" disabled selected>Select Employee Name</option>
+        <option>Aamir</option>
+        <option>Abdul Ghani</option>
+        <option>Abebe Melaku</option>
+        <option>Arjun</option>
+        <option>Aruna</option>
+        <option>AVIDESH</option>
+        <option>Balachandran</option>
+        <option>Begraj Singh</option>
+        <option>Blsin</option>
+        <option>Chaminda</option>
+        <option>Dhananjay</option>
+        <option>Gouthaman</option>
+        <option>Guddu</option>
+        <option>Gufran</option>
+        <option>Jagtar Singh</option>
+        <option>Jemal Mohammed</option>
+        <option>Jemal abdul</option>
+        <option>Mahendran</option>
+        <option>MD Sagir</option>
+        <option>MD Samsad</option>
+        <option>MD Shamshul</option>
+        <option>Misganaw</option>
+        <option>Mohamad Waseem</option>
+        <option>Mohammad Ashif</option>
+        <option>Mubarak Ali</option>
+        <option>Prince</option>
+        <option>Riyasuddin</option>
+        <option>Ruban</option>
+        <option>Subash</option>
+        <option>Suchin</option>
+        <option>Sulendra</option>
+        <option>Suresh</option>
+        <option>Umesh Sharma</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Start Time</label>
+      <input type="time" class="form-control" name="startTime[]" required oninput="calculateTotalManhours()">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">End Time</label>
+      <input type="time" class="form-control" name="endTime[]" required oninput="calculateTotalManhours()">
+    </div>
+    <div class="col-md-2 mt-4">
+      <button type="button" class="btn btn-danger" onclick="removeEmployee(this)">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <button type="button" class="btn btn-primary" onclick="addEmployee()">+ Add Employee</button>
+</div>
+
+  <button type="submit" class="btn btn-success">Submit</button>
+  <button type="reset" class="btn btn-danger ms-2">Cancel</button>
+</form>
+
+<hr class="my-4">
+
+<h5>Submitted Records</h5>
+<div class="table-responsive">
+  <table id="submittedTable" class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Project</th>
+        <th>Reported By</th>
+        <th>Task No</th>
+        <th>Description</th>
+        <th>Budgeted MH</th>
+        <th>Utilized MH</th>
+        <th>Completion %</th>
+        <th>Employee Name</th>
+        <th>Working Hours</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data will be inserted here -->
+    </tbody>
+  </table>
+</div>
+                 <!-- <div class="card-bo
+            
+                  <div class="card-action">-->
+               
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+<script>
+function calculateTotalManhours() {
+  const startTimes = document.getElementsByName("startTime[]");
+  const endTimes = document.getElementsByName("endTime[]");
+  let totalHours = 0;
+
+  for (let i = 0; i < startTimes.length; i++) {
+    const start = startTimes[i].value;
+    const end = endTimes[i].value;
+
+    if (start && end) {
+      const startDate = new Date("1970-01-01T" + start + ":00");
+      const endDate = new Date("1970-01-01T" + end + ":00");
+
+      let diff = (endDate - startDate) / (1000 * 60 * 60); // in hours
+      if (diff < 0) diff += 24;
+      totalHours += diff;
+    }
+  }
+
+  const budgeted = parseFloat(document.getElementById("manhours").value) || 0;
+  const budgetInput = document.getElementById("budget");
+  const invalidFeedback = budgetInput.nextElementSibling;
+
+  // Set calculated value
+  budgetInput.value = totalHours ? totalHours.toFixed(2) : '';
+
+  // Only validate if both fields have values
+  if (!totalHours || !budgeted) {
+    budgetInput.classList.remove("is-invalid");
+    if (invalidFeedback) invalidFeedback.style.display = 'none';
+    return;
+  }
+
+  if (totalHours > budgeted) {
+    budgetInput.classList.add("is-invalid");
+    if (invalidFeedback) invalidFeedback.style.display = 'block';
+  } else {
+    budgetInput.classList.remove("is-invalid");
+    if (invalidFeedback) invalidFeedback.style.display = 'none';
+  }
+}
+</script>
+
+<script>
+  const viewDataURL = 'https://script.google.com/macros/s/AKfycbzS-uIMqsuAo0_gv4TAcr_r9dGWuVwrr2umr7pvJP3UJLjAn2lX3qUzpAVdSQHyI_z0Uw/exec?action=read';
+
+  async function loadSubmittedData() {
+  try {
+    // Use a more direct approach with better error handling
+    const response = await fetch(viewDataURL, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      throw new Error('Invalid JSON response from server');
+    }
+    
+    const tbody = document.querySelector('#submittedTable tbody');
+    tbody.innerHTML = '';
+
+    if (data && Array.isArray(data) && data.length > 0) {
+      data.forEach(entry => {
+        let formattedDate = '';
+        if (entry.Date) {
+          try {
+            const date = new Date(entry.Date);
+            if (!isNaN(date.getTime())) {
+              formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            } else {
+              formattedDate = entry.Date.toString();
+            }
+          } catch (dateError) {
+            formattedDate = entry.Date.toString();
+          }
+        }
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${formattedDate}</td>
+          <td>${entry['Project Name'] || ''}</td>
+          <td>${entry['Reported By'] || ''}</td>
+          <td>${entry['Task No'] || ''}</td>
+          <td style="max-width: 200px; word-wrap: break-word;">${entry['Task Description'] || ''}</td>
+          <td>${entry['Budgeted Manhours'] || ''}</td>
+          <td>${entry['Utilized Manhours'] || ''}</td>
+          <td>${entry['Completion %'] || ''}${entry['Completion %'] ? '%' : ''}</td>
+          <td>${entry['Employee Names'] || ''}</td>
+          <td>${entry['Working Hours'] || ''}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } else if (data && data.error) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td colspan="10" class="text-center text-danger">Server error: ${data.error}</td>`;
+      tbody.appendChild(row);
+    } else {
+      const row = document.createElement('tr');
+      row.innerHTML = '<td colspan="10" class="text-center">No data available</td>';
+      tbody.appendChild(row);
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    const tbody = document.querySelector('#submittedTable tbody');
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Error loading data: ${error.message}<br><small>Check console for details</small></td></tr>`;
+  }
+}
+  // Call this once form is submitted or page loads
+  document.addEventListener('DOMContentLoaded', loadSubmittedData);
+</script>
+
+<!-- loadSubmittedData();  -->
+
+<script>
+function addEmployee() {
+  const section = document.getElementById('employeeSection');
+  const firstRow = section.querySelector('.employee-row');
+  const newRow = firstRow.cloneNode(true);
+  
+  // Clear values in the cloned row
+  newRow.querySelectorAll('select, input').forEach(input => {
+    input.value = '';
+  });
+
+  // Show the remove button in new rows
+  const removeBtn = newRow.querySelector('button');
+  removeBtn.style.display = 'inline-block';
+
+  section.appendChild(newRow);
+}
+
+function removeEmployee(button) {
+  const section = document.getElementById('employeeSection');
+  const allRows = section.querySelectorAll('.employee-row');
+  if (allRows.length > 1) {
+    button.closest('.employee-row').remove();
+  } else {
+    alert("At least one employee is required.");
+  }
+}
+
+window.onload = function () {
+  // Hide the remove button for the first row on page load
+  const firstRemoveBtn = document.querySelector('.employee-row button');
+  if (firstRemoveBtn) {
+    firstRemoveBtn.style.display = 'none';
+  }
+};
+</script>
+
+<script>
+  // Sample data: project to tasks mapping
+  const projectTasks = {
+   'Springs': [
+      'T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09', 'T10',
+      'T11', 'T12', 'T13', 'T14', 'T15', 'T16', 'T17', 'T18', 'T19', 'T20',
+      'T21', 'T22', 'T23', 'T24', 'T25', 'T26', 'T27', 'T28', 'T29', 'T30',
+      'T31', 'T32', 'T33', 'T34', 'T35', 'T36', 'T37', 'T38', 'T39', 'T40',
+      'T41', 'T42', 'T43', 'T44', 'T45', 'T46', 'T47', 'T48', 'T49', 'T50',
+      'T51', 'T52', 'T53', 'T54', 'T55', 'T56', 'T57', 'T58', 'T59', 'T60',
+      'T61', 'T62', 'T63', 'T64', 'T65', 'T66', 'T67', 'T68', 'T69', 'T70',
+      'T71', 'T72', 'T73', 'T74', 'T75', 'T76', 'T77', 'T78', 'T79', 'T80',
+      'T81', 'T82', 'T83', 'T84', 'T85', 'T86', 'T87', 'T88'
+    ],
+    'Damac': [
+      'T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09', 'T10',
+      'T11', 'T12', 'T13', 'T14', 'T15', 'T16', 'T17', 'T18', 'T19', 'T20',
+      'T21', 'T22', 'T23', 'T24', 'T25', 'T26', 'T27', 'T28', 'T29', 'T30',
+      'T31', 'T32', 'T33', 'T34', 'T35', 'T36', 'T37', 'T38', 'T39', 'T40',
+      'T41', 'T42'
+    ],
+
+    'Palm Jumeirah': ['P01', 'P02']
+  };
+
+  function filterTaskNo() {
+    const projectSelect = document.getElementById('projectName');
+    const taskSelect = document.getElementById('taskNo');
+    const selectedProject = projectSelect.value;
+
+    // Clear current options
+    taskSelect.innerHTML = '<option value="">Select Task</option>';
+
+    if (selectedProject && projectTasks[selectedProject]) {
+      // Populate taskNo dropdown with relevant task numbers
+      projectTasks[selectedProject].forEach(task => {
+        const option = document.createElement('option');
+        option.value = task;
+        option.textContent = task;
+        taskSelect.appendChild(option);
+      });
+    }
+  }
+</script>
+
+      <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzS-uIMqsuAo0_gv4TAcr_r9dGWuVwrr2umr7pvJP3UJLjAn2lX3qUzpAVdSQHyI_z0Uw/exec';
+        const taskData = [
+      { projectName: 'Damac', taskNo: 'T01', taskDescription: 'Covering', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T02', taskDescription: 'Demolition', manhours: 60, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T03', taskDescription: 'Waste disposal', manhours: 60, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T04', taskDescription: 'Core Cutting', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T05', taskDescription: 'Floor Screeding', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T06', taskDescription: 'Plastering', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T07', taskDescription: 'Plumbing', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T08', taskDescription: 'Water proofing', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T09', taskDescription: 'Bathroom Niche shelve', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T10', taskDescription: 'SPC Flooring', manhours: 0, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T11', taskDescription: 'Skirting - Ground Floor', manhours: 40, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T12', taskDescription: 'Tiles - Bathroom', manhours: 100, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T13', taskDescription: 'Vanity Unit', manhours: 60, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T14', taskDescription: 'Carpentry - Kitchen Top Cabinet', manhours: 50, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T15', taskDescription: 'Carpentry - Kitchen Bottom Cabinet Doors', manhours: 40, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T16', taskDescription: 'Cabinet - Appliance Cabinet', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T17', taskDescription: 'Skirting - Kitchen PVC', manhours: 5, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T18', taskDescription: 'Tiles - Kitchen Backsplash', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T19', taskDescription: 'Ceiling', manhours: 50, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T20', taskDescription: 'AC Vents', manhours: 5, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T21', taskDescription: 'Media Wall', manhours: 80, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T22', taskDescription: 'Wardrobe Master Bedroom', manhours: 120, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T23', taskDescription: 'Under Staircase Shelf', manhours: 40, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T24', taskDescription: 'Painting - Internal Walls', manhours: 100, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T25', taskDescription: 'Spray Painting - Wooden Doors', manhours: 80, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T26', taskDescription: 'Spray Painting - Sealer Coat', manhours: 15, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T27', taskDescription: 'Spray Painting - Staircase Handrail', manhours: 30, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T28', taskDescription: 'Spray Painting - Bedroom Cabinets', manhours: 30, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T29', taskDescription: 'Shower Partition', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T30', taskDescription: 'Shower Mixer Installation', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T31', taskDescription: 'Wash Basin Mixer Installation', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T32', taskDescription: 'Sink Mixer Installation', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T33', taskDescription: 'Spot Lights', manhours: 20, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T34', taskDescription: 'Electrical - Sockets and Points', manhours: 0, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T35', taskDescription: 'Painting - Boundary Wall', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T36', taskDescription: 'Door Repair - Rear Aluminum', manhours: 0, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T37', taskDescription: 'Top Cabinets - Bedrooms 01 & 02', manhours: 60, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T38', taskDescription: 'Leak Rectification', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T39', taskDescription: 'Gypsum Partition - Maids Room', manhours: 10, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T40', taskDescription: 'Bathroom Accessories Installation', manhours: 30, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T41', taskDescription: 'Sliding Door - Maid Room', manhours: 30, budget: 0 },
+      { projectName: 'Damac', taskNo: 'T42', taskDescription: 'Seating Area - Master Bathroom', manhours: 10, budget: 0 },
+
+
+      { projectName: 'Springs', taskNo: 'T01', taskDescription: 'Covering - Covering Garage area with metal sheets and supports (to Store construction materials and waste)', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T02', taskDescription: 'Demolishing - Demolition of bathroom fittings, powder room, walls, SPC flooring, staircase, duct & ceiling, podium, and study room ceiling', manhours: 120, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T03', taskDescription: 'Waste disposal - Loading construction wastes, transportation, unloading and disposal', manhours: 200, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T04', taskDescription: 'Floor Screeding - Screeding at all demolished/damaged areas, guest & master bathrooms, staircase', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T05', taskDescription: 'Self levelling - Self levelling at ground and first floor to install flooring', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T06', taskDescription: 'Civil Works - Demolition of duct riser and wall, re-routing plumbing and AC drain lines', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T07', taskDescription: 'Blockworks - New office, maid, study, powder WC, master & bedroom walls', manhours: 100, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T08', taskDescription: 'Gypsum works - Kitchen wall, mini library arch, coffee bar arch', manhours: 50, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T09', taskDescription: 'Plastering - New block walls, kitchen wall, bathroom walls, damaged areas', manhours: 100, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T10', taskDescription: 'Bathroom Niche shelve - Niche shelves with strip lights in master & common bathroom', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T11', taskDescription: 'Lintel Beam - For kitchen, living room, office, maid’s, and master bathroom', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T12', taskDescription: 'Core Cutting - In master and kid’s bathrooms for WC, shower, bathtub, drain', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T13', taskDescription: 'Tiles - Supply and install floor tiles in maid’s room (6 sqm)', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T14', taskDescription: 'Civil Works - Staircase extension with steel supports and concreting', manhours: 25, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T15', taskDescription: 'Tiles - Staircase tile installation', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T16', taskDescription: 'Strip light - Install motion sensor strip lights at staircase', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T17', taskDescription: 'Skirting - Tile skirting for maid\'s room', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T18', taskDescription: 'Tiles - Bathroom tiles installation with glue & grout (master, kid’s, powder)', manhours: 80, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T19', taskDescription: 'Floor Drain 60CM Black Matt - Supply only', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T20', taskDescription: 'Floor drain 15 x 15 Matt Black - Supply only', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T21', taskDescription: 'Microcement - Apply in master, kid’s, and powder bathrooms', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T22', taskDescription: 'SPC Flooring - Install chevron pattern SPC flooring (70+55 sqm)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T23', taskDescription: 'Skirting - MDF skirting with PU white paint finish', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T24', taskDescription: 'Ceiling - Flat ceilings in various rooms including office, kitchen, bathrooms', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T25', taskDescription: 'Ceiling - Bulkhead style ceiling with cove light and high middle ceiling (living, study, bedrooms)', manhours: 120, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T26', taskDescription: 'Painting - Internal painting of walls and ceilings with Jotun Fenomastic', manhours: 100, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T27', taskDescription: 'Painting - External painting including villa walls and compound wall with Jotashield', manhours: 80, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T28', taskDescription: 'Spray Painting - All wooden doors and frames, PU finish, reinstallation with new handles', manhours: 80, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T29', taskDescription: 'Spray Painting - External same color, internal white PU paint', manhours: 15, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T30', taskDescription: 'UPVC Bifold door - Living room bi-folding door with flynet (4x2.25m)', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T31', taskDescription: 'Aluminum Window - Sliding door with arch top (2.35x1m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T32', taskDescription: 'UPVC Window - Play/study room swing window (1.05x1.05m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T33', taskDescription: 'UPVC Window - Master bedroom swing window (1.4x1.65m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T34', taskDescription: 'UPVC Window - Master bathroom tilt & turn window (0.725x1.05m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T35', taskDescription: 'UPVC Door - Master balcony door (0.9x2.25m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T36', taskDescription: 'UPVC Window - Staircase fixed glass (0.75x1.65m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T37', taskDescription: 'UPVC Window - Kid’s bedroom swing window with flynet', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T38', taskDescription: 'UPVC Window - Guest bedroom swing window with flynet (0.75x1.65m)', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T39', taskDescription: 'Door - Supply and installation of normal solid wooden doors', manhours: 50, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T40', taskDescription: 'Hidden door - Maid’s room hidden door with fluted panel (90x220cm)', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T41', taskDescription: 'Aluminium Door - Office room aluminum framed swing door (90x220cm)', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T42', taskDescription: 'Door - Kitchen solid wooden pocket door with PU finish (235x220cm)', manhours: 80, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T43', taskDescription: 'Door - Solid wooden doors for master and kids bedrooms with PU paint', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T44', taskDescription: 'Glass handrail - Installation of glass handrail with wooden top rail', manhours: 120, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T45', taskDescription: 'Shower Partition - Master and common bathrooms (fixed glass type)', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T46', taskDescription: 'Cabinet - Under staircase storage cabinet with drawers and shelves', manhours: 50, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T47', taskDescription: 'Carpentry - Mini library on 1st floor with strip lights and veneer finish', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T48', taskDescription: 'Carpentry - Coffee bar in office room with quartz top, wine hangers, lighting', manhours: 120, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T49', taskDescription: 'Carpentry - Office table in quartz finish, fluted panels, open shelves, printer cabinet', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T50', taskDescription: 'Media Wall - Fluted wall panel with drawers (4m wide) for 65" TV', manhours: 50, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T51', taskDescription: 'Vanity unit - Master Bathroom vanity unit with quartz counter, cabinets, and strip lights', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T52', taskDescription: 'Vanity unit - Kid’s Bathroom vanity unit with quartz counter and tall storage cabinets', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T53', taskDescription: 'Vanity unit - Powder Room vanity unit with quartz counter and cabinet', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T54', taskDescription: 'Wardrobe - Master bedroom wardrobe with drawers, hangers, rotating shelves, sensors', manhours: 80, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T55', taskDescription: 'Wardrobe - Kid’s bedroom wardrobe with shelves and oval hanger', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T56', taskDescription: 'Wardrobe - Guest bedroom wardrobe with soft-closing hinges', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T57', taskDescription: 'Wall Panel - Entrance wall MDF veneer finish (3m x 2.7m)', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T58', taskDescription: 'Wall Panel - Master bedroom wall panelling (3m H x 50-60cm W x 2)', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T59', taskDescription: 'Spot Light - Install 64 spot lights in multiple rooms and areas', manhours: 50, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T60', taskDescription: 'ELECTRICAL - Fan connection and installation in maid\'s room', manhours: 5, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T61', taskDescription: 'Wall light - Power and installation of client-supplied wall lights', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T62', taskDescription: 'LIGHTS - Power and installation of pendant lights', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T63', taskDescription: 'MEP Works - Plumbing connections for kitchen (sink, dishwasher, washer)', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T64', taskDescription: 'Gas Pipe - Relocation of gas pipe from existing position', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T65', taskDescription: 'Floor drain 15 x 15 - Shifting kitchen floor drain near new sink', manhours: 5, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T66', taskDescription: 'MEP Works - New bathroom plumbing (WC, wash basin, shower mixer)', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T67', taskDescription: 'Water proofing - Waterproofing at all bathrooms', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T68', taskDescription: 'Wall mounted WC - Install Vitra wall mount WC and concealed tank in 3 bathrooms', manhours: 75, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T69', taskDescription: 'Angle Valve - Supply of Grohe chrome 1/2" angle valves for all fittings', manhours: 0, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T70', taskDescription: 'Shower mixer - Concealed shower mixers in master and kid’s bathroom', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T71', taskDescription: 'Wash Basin Mixer - Concealed type mixers in 3 bathrooms', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T72', taskDescription: 'Hand Shower - Install client-supplied hand shower in kid’s bathroom', manhours: 2, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T73', taskDescription: 'Shower mixer - Concealed waterfall mixer for bathtub in kid’s bathroom', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T74', taskDescription: 'Installation - Freestanding bathtub installation with connections', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T75', taskDescription: 'Installation - Install bathroom accessories (mirror, towel rack, holders, etc.)', manhours: 60, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T76', taskDescription: 'Toilet accessories - Wall mounted mirror, towel holder, robe hook, and soap dispenser', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T77', taskDescription: 'Water pump - Supply and installation of new water pump system', manhours: 5, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T78', taskDescription: 'GRP Water tank - Supply and installation of new GRP water tank 500 Gallons', manhours: 5, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T79', taskDescription: 'Landscape - Grass (front yard) - Supply and installation of grass with edging bricks', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T80', taskDescription: 'Landscape - Grass (backyard) - Supply and installation of grass with edging bricks', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T81', taskDescription: 'Landscape - BBQ counter with sink and quartz top', manhours: 40, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T82', taskDescription: 'Landscape - Tile works at selected areas in front and backyard', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T83', taskDescription: 'Landscape - Water feature with jets, LED lights, waterproofing, tile, pump, drain, GRC cladding', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T84', taskDescription: 'Landscape - Aluminum hanging pergola (2.8 x 2.5m) powder coated with installation', manhours: 30, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T85', taskDescription: 'Landscape - Outdoor IP rated garden lighting system', manhours: 10, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T86', taskDescription: 'Landscape - Aluminum gate with locks and supports', manhours: 20, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T87', taskDescription: 'Landscape - Tiled steps from villa level to garden level', manhours: 15, budget: 0 },
+      { projectName: 'Springs', taskNo: 'T88', taskDescription: 'Landscape - Paint all boundary walls and planter boxes', manhours: 5, budget: 0 }
+    ];
+      
+    // Update Task Info on project/task change
+    document.getElementById('projectName').addEventListener('change', updateTaskDetails);
+    document.getElementById('taskNo').addEventListener('change', updateTaskDetails);
+
+    function updateTaskDetails() {
+      const project = document.getElementById('projectName').value;
+      const task = document.getElementById('taskNo').value;
+      const taskInfo = taskData.find(item => item.projectName === project && item.taskNo === task);
+
+      if (taskInfo) {
+        document.getElementById('taskDescription').value = taskInfo.taskDescription;
+        document.getElementById('manhours').value = taskInfo.manhours;
+        document.getElementById('budget').value = taskInfo.budget;
+      } else {
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('manhours').value = '';
+        document.getElementById('budget').value = '';
+      }
+    }
+
+    // Submit to Google Sheets - UPDATED VERSION
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load data when page loads
+      loadSubmittedData();
+      
+      // Form submission handler
+      document.getElementById('dailyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Collect employee data with calculated working hours
+        const employeeNames = document.querySelectorAll('select[name="employeeName[]"]');
+        const startTimes = document.querySelectorAll('input[name="startTime[]"]');
+        const endTimes = document.querySelectorAll('input[name="endTime[]"]');
+        
+        const employees = [];
+        const hours = [];
+        
+        employeeNames.forEach((emp, index) => {
+          if (emp.value && startTimes[index].value && endTimes[index].value) {
+            employees.push(emp.value);
+            
+            // Calculate working hours for this employee
+            const start = new Date("1970-01-01T" + startTimes[index].value + ":00");
+            const end = new Date("1970-01-01T" + endTimes[index].value + ":00");
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24;
+            hours.push(diff.toFixed(2));
+          }
+        });
+
+        if (employees.length === 0) {
+          alert('Please add at least one employee with start and end times.');
+          return;
+        }
+        
+        // Collect form data
+        const formData = new FormData();
+        formData.append('projectName', document.getElementById('projectName').value);
+        formData.append('reportedBy', document.getElementById('reportedBy').value);
+        formData.append('taskNo', document.getElementById('taskNo').value);
+        formData.append('taskDescription', document.getElementById('taskDescription').value);
+        formData.append('manhours', document.getElementById('manhours').value);
+        formData.append('budget', document.getElementById('budget').value);
+        formData.append('completion', document.getElementById('completion').value);
+        formData.append('employeeNames', employees.join(', '));
+        formData.append('workingHours', hours.join(', '));
+
+        // Show loading message
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Submitting...';
+        submitBtn.disabled = true;
+
+        // Submit to Google Sheets
+        fetch(scriptURL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          console.log('Response received:', response);
+          return response.text();
+        })
+        .then(result => {
+          console.log('Result:', result);
+          alert('Form submitted successfully!');
+          
+          // Reset form
+          document.getElementById('dailyForm').reset();
+          document.getElementById('taskDescription').value = '';
+          document.getElementById('manhours').value = '';
+          document.getElementById('budget').value = '';
+          document.getElementById('taskNo').innerHTML = '<option value="">Select Task</option>';
+          
+          // Reset employee section
+          const employeeSection = document.getElementById('employeeSection');
+          const allRows = employeeSection.querySelectorAll('.employee-row');
+          for(let i = allRows.length - 1; i > 0; i--) {
+            allRows[i].remove();
+          }
+          allRows[0].querySelectorAll('select, input').forEach(input => input.value = '');
+          
+          // Reload submitted data
+          setTimeout(() => {
+            loadSubmittedData();
+          }, 2000); // Wait 2 seconds for Google Sheets to update
+        })
+        .catch(err => {
+          console.error('Error:', err);
+          alert('There was an error submitting the form: ' + err.message);
+        })
+        .finally(() => {
+          // Restore button
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        });
+      });
+    });
+    
+  </script>
+
+
+         <footer class="footer">
+          <div class="container-fluid d-flex justify-content-between">
+            <nav class="pull-left">
+              <ul class="nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="https://www.wefit.ae/">
+                    WEFIT
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#"> Help </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#"> Licenses </a>
+                </li>
+              </ul>
+            </nav>
+            <div class="copyright">
+              2025, made with <i class="fa fa-heart heart text-danger"></i> by
+              <a href="https://www.wefit.ae/">WEFIT</a>
+            </div>
+            <div>
+              Distributed by
+              <a target="_blank" href="https://www.wefit.ae/">WEFIT</a>.
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Custom template | don't include it in your project! -->
+      <div class="custom-template">
+        <div class="title">Settings</div>
+        <div class="custom-content">
+          <div class="switcher">
+            <div class="switch-block">
+              <h4>Logo Header</h4>
+              <div class="btnSwitch">
+                <button
+                  type="button"
+                  class="selected changeLogoHeaderColor"
+                  data-color="dark"
+                ></button>
+                <button
+                  type="button"
+                  class="selected changeLogoHeaderColor"
+                  data-color="blue"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="purple"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="light-blue"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="green"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="orange"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="red"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="white"
+                ></button>
+                <br />
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="dark2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="blue2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="purple2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="light-blue2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="green2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="orange2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeLogoHeaderColor"
+                  data-color="red2"
+                ></button>
+              </div>
+            </div>
+            <div class="switch-block">
+              <h4>Navbar Header</h4>
+              <div class="btnSwitch">
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="dark"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="blue"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="purple"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="light-blue"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="green"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="orange"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="red"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="white"
+                ></button>
+                <br />
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="dark2"
+                ></button>
+                <button
+                  type="button"
+                  class="selected changeTopBarColor"
+                  data-color="blue2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="purple2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="light-blue2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="green2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="orange2"
+                ></button>
+                <button
+                  type="button"
+                  class="changeTopBarColor"
+                  data-color="red2"
+                ></button>
+              </div>
+            </div>
+            <div class="switch-block">
+              <h4>Sidebar</h4>
+              <div class="btnSwitch">
+                <button
+                  type="button"
+                  class="selected changeSideBarColor"
+                  data-color="white"
+                ></button>
+                <button
+                  type="button"
+                  class="changeSideBarColor"
+                  data-color="dark"
+                ></button>
+                <button
+                  type="button"
+                  class="changeSideBarColor"
+                  data-color="dark2"
+                ></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="custom-toggle">
+          <i class="icon-settings"></i>
+        </div>
+      </div>
+      <!-- End Custom template -->
+    </div>
+    <!--   Core JS Files   -->
+    <script src="../assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/core/popper.min.js"></script>
+    <script src="../assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="../assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+    <!-- Chart JS -->
+    <script src="../assets/js/plugin/chart.js/chart.min.js"></script>
+
+    <!-- jQuery Sparkline -->
+    <script src="../assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+
+    <!-- Chart Circle -->
+    <script src="../assets/js/plugin/chart-circle/circles.min.js"></script>
+
+    <!-- Datatables -->
+    <script src="../assets/js/plugin/datatables/datatables.min.js"></script>
+
+    <!-- Bootstrap Notify -->
+    <script src="../assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+    <!-- jQuery Vector Maps -->
+    <script src="../assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="../assets/js/plugin/jsvectormap/world.js"></script>
+
+    <!-- Google Maps Plugin -->
+    <script src="../assets/js/plugin/gmaps/gmaps.js"></script>
+
+    <!-- Sweet Alert -->
+    <script src="../assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+    <!-- Kaiadmin JS -->
+    <script src="../assets/js/kaiadmin.min.js"></script>
+
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="../assets/js/setting-demo2.js"></script>
+  </body>
+</html>

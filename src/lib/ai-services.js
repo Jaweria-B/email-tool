@@ -117,14 +117,14 @@ export class EmailGenerationService {
   }
 
   async generateWithDeepSeek(prompt) {
-    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.DEEPSEEK], {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
       },
       body: JSON.stringify({
-        model: AI_MODELS[AI_PROVIDERS.DEEPSEEK],
+        model: 'deepseek-chat', 
         messages: [
           {
             role: 'system',
@@ -150,7 +150,7 @@ export class EmailGenerationService {
     const data = await response.json();
     return data.choices[0].message.content;
   }
-
+// sk-9849fc4495bc4f22a0b5cbf2bfe485d8
   async generateWithGemini(prompt) {
     const response = await fetch(`${AI_ENDPOINTS[AI_PROVIDERS.GEMINI]}?key=${this.apiKey}`, {
       method: 'POST',

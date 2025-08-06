@@ -16,7 +16,7 @@ export const AI_MODELS = {
 export const AI_ENDPOINTS = {
   [AI_PROVIDERS.QWEN]: 'https://api.aimlapi.com/v1/chat/completions',
   [AI_PROVIDERS.OPENAI]: 'https://api.openai.com/v1/chat/completions',
-  [AI_PROVIDERS.DEEPSEEK]: 'https://api.deepseek.com/v1/chat/completions',
+  [AI_PROVIDERS.DEEPSEEK]: 'https://api.deepseek.com/chat/completions',
   [AI_PROVIDERS.GEMINI]: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent'
 };
 

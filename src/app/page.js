@@ -1,13 +1,19 @@
 "use client"
 import React, { useState } from 'react';
-import { Send, Copy, Mail, Settings, Sparkles, User, Building, MessageSquare, Clock, Heart, Briefcase, Shield, Smile } from 'lucide-react';
+import { Send, Copy, Mail, Settings, Sparkles, User, Building, MessageSquare, Clock, Heart, Briefcase, Shield, Smile, LogOut, UserPlus, LogIn } from 'lucide-react';
 import { EmailGenerationService, createPrompt } from '../lib/ai-services';
 import { AI_PROVIDERS, AI_PROVIDER_INFO } from '../lib/ai-config';
 import ProviderSelector from '../components/ProviderSelector';
 import ApiSettings from '../components/ApiSettings';
 import EmailSender from '../components/EmailSender';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const EmailWriter = () => {
+  const [user, setUser] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     rawThoughts: '',
     tone: 'professional',
@@ -120,6 +126,9 @@ const EmailWriter = () => {
       
       // Result contains { subject: "...", body: "..." }
       setGeneratedEmail(result);
+      
+      // Save activity to database
+      await saveEmailActivity(result);
     } catch (error) {
       console.error('Error generating email:', error);
       alert(`Error generating email: ${error.message}. Please check your API key and try again.`);
@@ -156,11 +165,121 @@ const EmailWriter = () => {
     );
   }
 
+  const saveEmailActivity = async (emailData) => {
+    try {
+      await fetch('/api/email-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: emailData.subject,
+          body: emailData.body,
+          recipient: formData.recipient,
+          tone: formData.tone,
+          ai_provider: selectedProvider,
+          purpose: formData.purpose,
+          priority: formData.priority,
+          status: 'generated'
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save email activity:', error);
+    }
+  };
+
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/login');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
+          {/* Profile/Auth Section - Top Right */}
+          <div className="fixed top-6 right-6 z-50">
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  {user.name}
+                </button>
+                
+                {/* Profile Dropdown */}
+                {showProfile && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-4 shadow-2xl">
+                    <div className="text-white space-y-3">
+                      <div className="border-b border-white/20 pb-3">
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-sm text-purple-200">{user.email}</p>
+                        {user.company && <p className="text-xs text-purple-300">{user.company}</p>}
+                        {user.job_title && <p className="text-xs text-purple-300">{user.job_title}</p>}
+                      </div>
+                      <button
+                        onClick={() => router.push('/dashboard')}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2"
+                      >
+                        <Building className="h-4 w-4" />
+                        Dashboard
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2 text-red-200"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => router.push('/login')}
+                  className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </button>
+                <button
+                  onClick={() => router.push('/register')}
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Register
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center justify-center mb-6">
             <div className="bg-white/20 backdrop-blur-lg rounded-full p-4 border border-white/30">
               <Mail className="h-12 w-12 text-white" />
@@ -176,23 +295,24 @@ const EmailWriter = () => {
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="mt-6 bg-white/20 backdrop-blur-lg text-white px-6 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2 mx-auto"
+            className="my-6 bg-white/20 backdrop-blur-lg text-white px-6 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2 mx-auto"
           >
             <Settings className="h-4 w-4" />
             API Settings
           </button>
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="mb-8">
+              <ApiSettings
+                selectedProvider={selectedProvider}
+                apiKeys={apiKeys}
+                onApiKeyChange={handleApiKeyChange}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="mb-8">
-            <ApiSettings
-              selectedProvider={selectedProvider}
-              apiKeys={apiKeys}
-              onApiKeyChange={handleApiKeyChange}
-            />
-          </div>
-        )}
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Input Section */}
