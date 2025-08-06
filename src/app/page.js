@@ -155,16 +155,6 @@ const EmailWriter = () => {
     setShowEmailSender(true);
   };
 
-  if (showEmailSender) {
-    return (
-      <EmailSender 
-        subject={generatedEmail.subject}
-        body={generatedEmail.body}
-        onBack={() => setShowEmailSender(false)}
-      />
-    );
-  }
-
   const saveEmailActivity = async (emailData) => {
     try {
       await fetch('/api/email-history', {
@@ -212,8 +202,32 @@ const EmailWriter = () => {
   };
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    const verifyAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const { user } = await response.json();
+          setUser(user);
+        } else {
+          router.push('/login');
+        }
+      } catch {
+        router.push('/login');
+      }
+    };
+    verifyAuth();
+  }, [router]); // router is stable from next/navigation
+
+  // Now that all hooks are declared, you can do early returns
+  if (showEmailSender) {
+    return (
+      <EmailSender 
+        subject={generatedEmail.subject}
+        body={generatedEmail.body}
+        onBack={() => setShowEmailSender(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
