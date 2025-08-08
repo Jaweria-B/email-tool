@@ -8,6 +8,7 @@ import ApiSettings from '../components/ApiSettings';
 import EmailSender from '../components/EmailSender';
 import { useRouter } from 'next/navigation';
 import { useEffect, useCallback  } from 'react';
+import Footer from '@/components/Footer';
 
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
@@ -39,7 +40,7 @@ const EmailWriter = () => {
     } catch (error) {
       console.error('Failed to load user data:', error);
     } finally {
-      setIsLoadingUser(false); // Set loading to false regardless of success/failure
+      setIsLoadingUser(false);
     }
   };
 
@@ -547,10 +548,16 @@ const EmailWriter = () => {
                   <>
                     <Sparkles className="h-5 w-5" />
                     Generate Email with {AI_PROVIDER_INFO[selectedProvider].name}
-                    {!user && <span className="text-xs opacity-75">(Sign in required)</span>}
                   </>
                 )}
               </button>
+              {!user && (
+                <div className="flex items-center justify-center gap-2 mt-3 text-red-300 text-sm">
+                  <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
+                  <span className="font-medium">Sign in required to generate emails</span>
+                  <div className="w- h-4 bg-red-600 rounded-full animate-pulse"></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -628,6 +635,7 @@ const EmailWriter = () => {
             Multi-AI email generation with professional quality results
           </p>
         </div>
+        <Footer/>
       </div>
     </div>
   );

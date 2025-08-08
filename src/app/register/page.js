@@ -13,6 +13,7 @@ const RegisterPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const router = useRouter();
 
   const handleInputChange = (field, value) => {
@@ -23,6 +24,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const response = await fetch('/api/auth/register', {
@@ -34,7 +36,11 @@ const RegisterPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/dashboard');
+        setSuccess(data.message);
+        // Redirect to verification page with email
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        }, 1500);
       } else {
         setError(data.error || 'Registration failed');
       }
@@ -68,6 +74,13 @@ const RegisterPage = () => {
           </div>
         )}
 
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 mb-6">
+            <p className="text-green-200 text-sm">{success}</p>
+          </div>
+        )}
+
         {/* Register Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -81,7 +94,8 @@ const RegisterPage = () => {
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Your full name"
               required
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -96,7 +110,8 @@ const RegisterPage = () => {
               onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="your@email.com"
               required
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -110,7 +125,8 @@ const RegisterPage = () => {
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
               placeholder="Your company name"
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -124,7 +140,8 @@ const RegisterPage = () => {
               value={formData.job_title}
               onChange={(e) => handleInputChange('job_title', e.target.value)}
               placeholder="Your job title"
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
