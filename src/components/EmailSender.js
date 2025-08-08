@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download } from 'lucide-react';
+import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff } from 'lucide-react';
 
 const EmailSender = ({ subject, body, onBack }) => {
   const [emailList, setEmailList] = useState(['']);
   const [emailConfig, setEmailConfig] = useState({
-    fromEmail: 'bjaweria509@gmail.com',
-    fromPassword: 'gwow fpxo tlll igin',
+    fromEmail: '',
+    fromPassword: '',
     subject: subject || 'Collaboration Opportunity'
   });
   const [sending, setSending] = useState(false);
@@ -13,6 +13,11 @@ const EmailSender = ({ subject, body, onBack }) => {
   const [showConfig, setShowConfig] = useState(false);
   const [bulkEmailText, setBulkEmailText] = useState('');
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [extractedEmails, setExtractedEmails] = useState([]);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [importMethod, setImportMethod] = useState('text'); // 'text' or 'file'
+  const [fileProcessing, setFileProcessing] = useState(false);
+  const [showAllEmails, setShowAllEmails] = useState(false);
 
   // Update subject when prop changes
   useEffect(() => {
@@ -41,15 +46,92 @@ const EmailSender = ({ subject, body, onBack }) => {
     return re.test(email);
   };
 
+  const extractEmailsFromText = (text) => {
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const foundEmails = text.match(emailRegex) || [];
+    return [...new Set(foundEmails.filter(email => validateEmail(email)))];
+  };
+
+  const parseCSV = (text) => {
+    const lines = text.split('\n');
+    const emails = [];
+    
+    lines.forEach(line => {
+      const cells = line.split(',').map(cell => cell.trim().replace(/"/g, ''));
+      cells.forEach(cell => {
+        const extractedEmails = extractEmailsFromText(cell);
+        emails.push(...extractedEmails);
+      });
+    });
+    
+    return [...new Set(emails)];
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setFileProcessing(true);
+    
+    try {
+      const text = await file.text();
+      let emails = [];
+
+      if (file.name.endsWith('.csv')) {
+        emails = parseCSV(text);
+      } else if (file.name.endsWith('.txt')) {
+        emails = extractEmailsFromText(text);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        // For Excel files, we'll treat them as CSV for now
+        // In a real implementation, you'd use a library like SheetJS
+        emails = parseCSV(text);
+      } else {
+        // Try to extract emails from any text file
+        emails = extractEmailsFromText(text);
+      }
+
+      setExtractedEmails(emails);
+      if (emails.length > 0) {
+        setShowEmailPreview(true);
+      } else {
+        alert('No valid email addresses found in the file.');
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      alert('Error processing file. Please try again.');
+    } finally {
+      setFileProcessing(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
   const processBulkEmails = () => {
-    const emails = bulkEmailText
-      .split('\n')
-      .map(email => email.trim())
-      .filter(email => email && validateEmail(email));
+    let emails = [];
+    
+    if (importMethod === 'text') {
+      emails = bulkEmailText
+        .split('\n')
+        .map(email => email.trim())
+        .filter(email => email && validateEmail(email));
+    } else {
+      emails = extractedEmails;
+    }
     
     setEmailList(emails.length > 0 ? emails : ['']);
     setBulkEmailText('');
+    setExtractedEmails([]);
     setShowBulkImport(false);
+    setShowEmailPreview(false);
+    setImportMethod('text');
+  };
+
+  const closeBulkImport = () => {
+    setBulkEmailText('');
+    setExtractedEmails([]);
+    setShowBulkImport(false);
+    setShowEmailPreview(false);
+    setImportMethod('text');
   };
 
   const sendEmails = async () => {
@@ -107,6 +189,7 @@ const EmailSender = ({ subject, body, onBack }) => {
   };
 
   const validEmailCount = emailList.filter(email => email && validateEmail(email)).length;
+  const displayedEmails = showAllEmails ? emailList : emailList.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
@@ -161,27 +244,39 @@ const EmailSender = ({ subject, body, onBack }) => {
               </div>
             </div>
 
-            {/* Bulk Import Modal */}
-            {showBulkImport && (
+            {/* Email Preview Modal */}
+            {showEmailPreview && (
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 max-w-md w-full mx-4">
-                  <h3 className="text-xl font-bold text-white mb-4">Bulk Import Emails</h3>
-                  <textarea
-                    value={bulkEmailText}
-                    onChange={(e) => setBulkEmailText(e.target.value)}
-                    placeholder="Enter email addresses, one per line&#10;example@email.com&#10;another@email.com"
-                    rows={8}
-                    className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent resize-none mb-4"
-                  />
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white">Extracted Emails ({extractedEmails.length})</h3>
+                    <button
+                      onClick={() => setShowEmailPreview(false)}
+                      className="text-white hover:text-red-300 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto mb-4">
+                    <div className="grid gap-2">
+                      {extractedEmails.map((email, index) => (
+                        <div key={index} className="bg-white/10 backdrop-blur-lg rounded-lg px-3 py-2 text-white text-sm">
+                          {email}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
                   <div className="flex gap-3">
                     <button
                       onClick={processBulkEmails}
                       className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all duration-300"
                     >
-                      Import Emails
+                      Import {extractedEmails.length} Emails
                     </button>
                     <button
-                      onClick={() => setShowBulkImport(false)}
+                      onClick={() => setShowEmailPreview(false)}
                       className="flex-1 bg-white/20 text-white py-2 px-4 rounded-lg hover:bg-white/30 transition-all duration-300"
                     >
                       Cancel
@@ -191,8 +286,108 @@ const EmailSender = ({ subject, body, onBack }) => {
               </div>
             )}
 
+            {/* Bulk Import Modal */}
+            {showBulkImport && !showEmailPreview && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 max-w-md w-full mx-4">
+                  <h3 className="text-xl font-bold text-white mb-4">Bulk Import Emails</h3>
+                  
+                  {/* Import Method Tabs */}
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => setImportMethod('text')}
+                      className={`flex-1 py-2 px-3 rounded-lg transition-all duration-300 ${
+                        importMethod === 'text' 
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                          : 'bg-white/20 text-purple-200 hover:bg-white/30'
+                      }`}
+                    >
+                      Text Input
+                    </button>
+                    <button
+                      onClick={() => setImportMethod('file')}
+                      className={`flex-1 py-2 px-3 rounded-lg transition-all duration-300 ${
+                        importMethod === 'file' 
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
+                          : 'bg-white/20 text-purple-200 hover:bg-white/30'
+                      }`}
+                    >
+                      File Upload
+                    </button>
+                  </div>
+
+                  {importMethod === 'text' ? (
+                    <textarea
+                      value={bulkEmailText}
+                      onChange={(e) => setBulkEmailText(e.target.value)}
+                      placeholder="Enter email addresses, one per line&#10;example@email.com&#10;another@email.com"
+                      rows={8}
+                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent resize-none mb-4"
+                    />
+                  ) : (
+                    <div className="mb-4">
+                      <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl p-6 text-center">
+                        <FileText className="h-12 w-12 text-white mx-auto mb-4" />
+                        <p className="text-purple-200 mb-4">
+                          Upload a file containing email addresses
+                        </p>
+                        <p className="text-purple-300 text-sm mb-4">
+                          Supported formats: CSV, TXT, Excel (.xlsx, .xls)
+                        </p>
+                        <input
+                          type="file"
+                          accept=".csv,.txt,.xlsx,.xls"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="file-upload"
+                          disabled={fileProcessing}
+                        />
+                        <label
+                          htmlFor="file-upload"
+                          className={`inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:from-pink-600 hover:to-purple-600 transition-all duration-300 ${
+                            fileProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          {fileProcessing ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4" />
+                              Choose File
+                            </>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3">
+                    {importMethod === 'text' && (
+                      <button
+                        onClick={processBulkEmails}
+                        disabled={!bulkEmailText.trim()}
+                        className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Import Emails
+                      </button>
+                    )}
+                    <button
+                      onClick={closeBulkImport}
+                      className="flex-1 bg-white/20 text-white py-2 px-4 rounded-lg hover:bg-white/30 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Email List Display */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {emailList.map((email, index) => (
+              {displayedEmails.map((email, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <input
                     type="email"
@@ -214,6 +409,26 @@ const EmailSender = ({ subject, body, onBack }) => {
                 </div>
               ))}
             </div>
+
+            {/* Show More/Less Button */}
+            {emailList.length > 5 && (
+              <button
+                onClick={() => setShowAllEmails(!showAllEmails)}
+                className="w-full mt-3 bg-white/10 backdrop-blur-lg text-purple-200 py-2 px-4 rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+              >
+                {showAllEmails ? (
+                  <>
+                    <EyeOff className="h-4 w-4" />
+                    Show Less ({emailList.length - 5} more hidden)
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    Show All ({emailList.length - 5} more emails)
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={addEmailField}
