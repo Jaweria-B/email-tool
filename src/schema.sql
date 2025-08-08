@@ -6,22 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
   company TEXT,
   job_title TEXT,
   email_verified BOOLEAN DEFAULT FALSE,
-  status TEXT DEFAULT 'pending', -- pending, active, suspended
+  status TEXT DEFAULT 'active',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Email verification codes table
-CREATE TABLE IF NOT EXISTS email_verification_codes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT NOT NULL,
-  code TEXT NOT NULL,
-  expires_at DATETIME NOT NULL,
-  used BOOLEAN DEFAULT FALSE,
-  attempts INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX(email),
-  INDEX(code)
 );
 
 -- User sessions table (simple session management)

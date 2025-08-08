@@ -1,10 +1,10 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
 import { Mail, User, Building, Briefcase, UserPlus, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const RegisterPage = () => {
+const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,7 +13,6 @@ const RegisterPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const router = useRouter();
 
   const handleInputChange = (field, value) => {
@@ -24,7 +23,6 @@ const RegisterPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       const response = await fetch('/api/auth/register', {
@@ -36,11 +34,8 @@ const RegisterPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(data.message);
-        // Redirect to verification page with email
-        setTimeout(() => {
-          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-        }, 1500);
+        // Redirect to verification page with email parameter
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       } else {
         setError(data.error || 'Registration failed');
       }
@@ -74,15 +69,8 @@ const RegisterPage = () => {
           </div>
         )}
 
-        {/* Success Message */}
-        {success && (
-          <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 mb-6">
-            <p className="text-green-200 text-sm">{success}</p>
-          </div>
-        )}
-
         {/* Register Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
             <label className="block text-purple-100 text-sm font-medium mb-2">
               <User className="h-4 w-4 inline mr-2" />
@@ -94,8 +82,7 @@ const RegisterPage = () => {
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Your full name"
               required
-              disabled={isLoading}
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
             />
           </div>
 
@@ -110,8 +97,7 @@ const RegisterPage = () => {
               onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="your@email.com"
               required
-              disabled={isLoading}
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
             />
           </div>
 
@@ -125,8 +111,7 @@ const RegisterPage = () => {
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
               placeholder="Your company name"
-              disabled={isLoading}
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
             />
           </div>
 
@@ -140,13 +125,12 @@ const RegisterPage = () => {
               value={formData.job_title}
               onChange={(e) => handleInputChange('job_title', e.target.value)}
               placeholder="Your job title"
-              disabled={isLoading}
-              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent disabled:opacity-50"
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
             />
           </div>
 
           <button
-            type="submit"
+            onClick={handleSubmit}
             disabled={isLoading}
             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-6"
           >
@@ -162,7 +146,7 @@ const RegisterPage = () => {
               </>
             )}
           </button>
-        </form>
+        </div>
 
         {/* Login Link */}
         <div className="text-center mt-6 pt-6 border-t border-white/20">
@@ -182,4 +166,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default Register;

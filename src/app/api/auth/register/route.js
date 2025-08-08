@@ -1,7 +1,7 @@
 // app/api/auth/register/route.js
 import { NextResponse } from 'next/server';
-import { userDbUpdated, verificationDb } from '@/lib/database/verification-db';
-import { sendVerificationEmail, generateVerificationCode, isRateLimited } from '@/lib/verification-service';
+import { userDb, verificationDb } from '@/lib/database';
+import { sendVerificationEmail, generateVerificationCode } from '@/lib/email-verification-service';
 
 export async function POST(request) {
   try {
@@ -19,25 +19,18 @@ export async function POST(request) {
     }
 
     // Check if user already exists
-    const existingUser = await userDbUpdated.findByEmailAny(email);
+    const existingUser = await userDb.findByEmail(email);
     if (existingUser) {
-      // If user exists but not verified, allow resending verification
-      if (!existingUser.email_verified) {
+      if (existingUser.email_verified) {
+        return NextResponse.json({ error: 'User already exists and is verified' }, { status: 409 });
+      } else {
+        // User exists but not verified, resend verification
         return await handleResendVerification(email, name);
       }
-      return NextResponse.json({ error: 'User already exists' }, { status: 409 });
     }
 
-    // Check rate limiting (max 5 attempts per day per email)
-    const todayAttempts = await verificationDb.getTodayAttempts(email);
-    if (isRateLimited(todayAttempts)) {
-      return NextResponse.json({ 
-        error: 'Too many verification attempts. Please try again tomorrow.' 
-      }, { status: 429 });
-    }
-
-    // Create pending user
-    const result = await userDbUpdated.createPending({ name, email, company, job_title });
+    // Create unverified user
+    const result = await userDb.create({ name, email, company, job_title });
     
     // Generate and send verification code
     const verificationCode = generateVerificationCode();
@@ -46,8 +39,6 @@ export async function POST(request) {
     const emailResult = await sendVerificationEmail(email, verificationCode, name);
     
     if (!emailResult.success) {
-      // If email sending fails, we should probably delete the pending user
-      // or handle this gracefully
       console.error('Failed to send verification email:', emailResult.error);
       return NextResponse.json({ 
         error: 'Failed to send verification email. Please try again.' 
@@ -57,7 +48,7 @@ export async function POST(request) {
     return NextResponse.json({ 
       success: true, 
       message: 'Registration initiated. Please check your email for verification code.',
-      email: email // Send back email for the verification page
+      email: email
     });
 
   } catch (error) {
@@ -69,13 +60,6 @@ export async function POST(request) {
 // Helper function to handle resending verification
 async function handleResendVerification(email, name) {
   try {
-    const todayAttempts = await verificationDb.getTodayAttempts(email);
-    if (isRateLimited(todayAttempts)) {
-      return NextResponse.json({ 
-        error: 'Too many verification attempts. Please try again tomorrow.' 
-      }, { status: 429 });
-    }
-
     const verificationCode = generateVerificationCode();
     await verificationDb.create(email, verificationCode);
     
@@ -89,7 +73,7 @@ async function handleResendVerification(email, name) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Verification code resent. Please check your email.',
+      message: 'Verification code sent. Please check your email.',
       email: email
     });
   } catch (error) {

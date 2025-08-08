@@ -8,7 +8,7 @@ const sql = neon(process.env.DATABASE_URL);
 // Initialize database tables
 const initializeSchema = async () => {
   try {
-    // Create users table
+    // Create users table with email_verified field
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -16,9 +16,23 @@ const initializeSchema = async () => {
         email TEXT UNIQUE NOT NULL,
         company TEXT,
         job_title TEXT,
-        status TEXT DEFAULT 'active',
+        email_verified BOOLEAN DEFAULT FALSE,
+        status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Create email_verification table
+    await sql`
+      CREATE TABLE IF NOT EXISTS email_verification (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL,
+        verification_code TEXT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        attempts INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(email)
       )
     `;
 
@@ -72,16 +86,13 @@ const initializeSchema = async () => {
   }
 };
 
-// Comment this out for now - run manually first
-// initializeSchema();
-
 // User operations
 export const userDb = {
-  // Create user
+  // Create user (unverified initially)
   create: async (userData) => {
     const result = await sql`
-      INSERT INTO users (name, email, company, job_title, status)
-      VALUES (${userData.name}, ${userData.email}, ${userData.company}, ${userData.job_title}, 'active')
+      INSERT INTO users (name, email, company, job_title, email_verified, status)
+      VALUES (${userData.name}, ${userData.email}, ${userData.company}, ${userData.job_title}, FALSE, 'pending')
       RETURNING id
     `;
     return { lastInsertRowid: result[0].id };
@@ -99,6 +110,17 @@ export const userDb = {
     return result[0] || null;
   },
 
+  // Verify user email
+  verifyEmail: async (email) => {
+    const result = await sql`
+      UPDATE users 
+      SET email_verified = TRUE, status = 'active', updated_at = CURRENT_TIMESTAMP
+      WHERE email = ${email}
+      RETURNING *
+    `;
+    return result[0] || null;
+  },
+
   // Update user
   update: async (id, userData) => {
     const result = await sql`
@@ -106,6 +128,57 @@ export const userDb = {
       SET name = ${userData.name}, company = ${userData.company}, job_title = ${userData.job_title}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
     `;
+    return result;
+  }
+};
+
+// Email verification operations
+export const verificationDb = {
+  // Create verification code
+  create: async (email, code) => {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    // Use upsert pattern
+    await sql`
+      INSERT INTO email_verification (email, verification_code, expires_at, attempts)
+      VALUES (${email}, ${code}, ${expiresAt.toISOString()}, 0)
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        verification_code = ${code}, 
+        expires_at = ${expiresAt.toISOString()}, 
+        attempts = 0,
+        created_at = CURRENT_TIMESTAMP
+    `;
+    
+    return true;
+  },
+
+  // Verify code
+  verify: async (email, code) => {
+    const result = await sql`
+      SELECT * FROM email_verification 
+      WHERE email = ${email} AND verification_code = ${code} AND expires_at > NOW()
+    `;
+    return result[0] || null;
+  },
+
+  // Increment attempts
+  incrementAttempts: async (email) => {
+    await sql`
+      UPDATE email_verification 
+      SET attempts = attempts + 1 
+      WHERE email = ${email}
+    `;
+  },
+
+  // Delete verification record
+  delete: async (email) => {
+    await sql`DELETE FROM email_verification WHERE email = ${email}`;
+  },
+
+  // Clean expired verifications
+  cleanExpired: async () => {
+    const result = await sql`DELETE FROM email_verification WHERE expires_at <= NOW()`;
     return result;
   }
 };
