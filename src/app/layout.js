@@ -16,7 +16,10 @@ export const metadata = {
   title: "Email Craft",
   description: "AI-powered email generator, and email sender",
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
+    ],
     shortcut: '/favicon.png',
     apple: '/favicon.png',
   },
@@ -25,9 +28,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
