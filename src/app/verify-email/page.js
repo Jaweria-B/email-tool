@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Mail, Shield, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-const VerifyEmail = () => {
+const VerifyEmailContent = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -230,6 +230,33 @@ const VerifyEmail = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Loading component for Suspense fallback
+const VerifyEmailLoading = () => (
+  <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4">
+    <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl w-full max-w-md">
+      <div className="text-center">
+        <div className="bg-white/20 backdrop-blur-lg rounded-full p-4 border border-white/30 w-fit mx-auto mb-4">
+          <Shield className="h-8 w-8 text-white" />
+        </div>
+        <h1 className="text-3xl font-bold text-white mb-4">
+          Verify Your Email
+        </h1>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+        <p className="text-purple-100 text-sm mt-4">Loading...</p>
+      </div>
+    </div>
+  </div>
+);
+
+// Main component with Suspense boundary
+const VerifyEmail = () => {
+  return (
+    <Suspense fallback={<VerifyEmailLoading />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 };
 

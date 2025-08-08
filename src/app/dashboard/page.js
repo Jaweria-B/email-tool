@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Mail, User, Calendar, TrendingUp, Activity, Send, Eye, LogOut, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -15,12 +15,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-    loadEmailHistory();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
@@ -32,24 +27,9 @@ const Dashboard = () => {
     } catch (error) {
       router.push('/login');
     }
-  };
+  }, [router]);
 
-  const loadEmailHistory = async () => {
-    try {
-      const response = await fetch('/api/email-history');
-      if (response.ok) {
-        const data = await response.json();
-        setEmailHistory(data.emails);
-        calculateStats(data.emails);
-      }
-    } catch (error) {
-      console.error('Failed to load email history:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const calculateStats = (emails) => {
+  const calculateStats = useCallback((emails) => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     
@@ -81,7 +61,27 @@ const Dashboard = () => {
       favoriteProvider,
       mostUsedTone
     });
-  };
+  }, []);
+
+  const loadEmailHistory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/email-history');
+      if (response.ok) {
+        const data = await response.json();
+        setEmailHistory(data.emails);
+        calculateStats(data.emails);
+      }
+    } catch (error) {
+      console.error('Failed to load email history:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [calculateStats]);
+
+  useEffect(() => {
+    checkAuth();
+    loadEmailHistory();
+  }, [checkAuth, loadEmailHistory]);
 
   const handleLogout = async () => {
     try {
