@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff } from 'lucide-react';
 
-const EmailSender = ({ subject, body, onBack }) => {
+const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [emailList, setEmailList] = useState(['']);
   const [emailConfig, setEmailConfig] = useState({
     fromEmail: '',
@@ -167,10 +167,27 @@ const EmailSender = ({ subject, body, onBack }) => {
       });
 
       const results = await response.json();
+      
       setSendResults(results);
+      
+      // Check if any emails were sent successfully
+      const successfulSends = results.filter(result => result.success);
+      const emailSentSuccessfully = successfulSends.length > 0;
+      
+      // Call the callback to trigger feedback
+      if (onEmailSent) {
+        onEmailSent(emailSentSuccessfully);
+      }
+      
     } catch (error) {
       console.error('Error sending emails:', error);
-      setSendResults([{ error: 'Failed to send emails. Please try again.' }]);
+      const errorResults = [{ error: 'Failed to send emails. Please try again.' }];
+      setSendResults(errorResults);
+      
+      // Call callback with false since sending failed
+      if (onEmailSent) {
+        onEmailSent(false);
+      }
     } finally {
       setSending(false);
     }

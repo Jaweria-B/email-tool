@@ -9,6 +9,8 @@ import EmailSender from '../components/EmailSender';
 import { useRouter } from 'next/navigation';
 import { useEffect, useCallback  } from 'react';
 import Footer from '@/components/Footer';
+import EmailGenerationFeedback from '@/components/EmailGenerationFeedback';
+import EmailSenderFeedback from '@/components/EmailSenderFeedback';
 
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
@@ -65,6 +67,9 @@ const EmailWriter = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [showEmailSender, setShowEmailSender] = useState(false);
+  const [showGenerationFeedback, setShowGenerationFeedback] = useState(false);
+  const [showSenderFeedback, setShowSenderFeedback] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const tones = [
     { value: 'professional', label: 'Professional', icon: Briefcase },
@@ -152,12 +157,13 @@ const EmailWriter = () => {
       const emailService = new EmailGenerationService(selectedProvider, currentApiKey);
       const prompt = createPrompt(formData);
       const result = await emailService.generateEmail(prompt);
-      
       // Result contains { subject: "...", body: "..." }
       setGeneratedEmail(result);
-      
       // Save activity to database
       await saveEmailActivity(result);
+      setTimeout(() => {
+        setShowGenerationFeedback(true);
+      }, 1500);
     } catch (error) {
       console.error('Error generating email:', error);
       alert(`Error generating email: ${error.message}. Please check your API key and try again.`);
@@ -206,6 +212,40 @@ const EmailWriter = () => {
     }
   };
 
+  const handleGenerationFeedback = async (feedbackData) => {
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'email_generation',
+          feedback: feedbackData,
+          ai_provider: selectedProvider,
+          user_id: user?.id
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    }
+  };
+
+  const handleSenderFeedback = async (feedbackData) => {
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'email_sender',
+          feedback: feedbackData,
+          email_sent: emailSent,
+          user_id: user?.id
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -218,11 +258,28 @@ const EmailWriter = () => {
 
   if (showEmailSender) {
     return (
-      <EmailSender 
-        subject={generatedEmail.subject}
-        body={generatedEmail.body}
-        onBack={() => setShowEmailSender(false)}
-      />
+      <>
+        <EmailSender 
+          subject={generatedEmail.subject}
+          body={generatedEmail.body}
+          onBack={() => setShowEmailSender(false)}
+          onEmailSent={(success) => {
+          setEmailSent(success);
+            // Show feedback after email sending attempt
+            setTimeout(() => {
+              setShowSenderFeedback(true);
+            }, 1000);
+          }}
+        />
+        {/* Render sender feedback on top of sender page */}
+        {showSenderFeedback && (
+          <EmailSenderFeedback
+            onClose={() => setShowSenderFeedback(false)} // Only close feedback
+            emailSent={emailSent}
+            onSubmit={handleSenderFeedback}
+          />
+        )}
+      </>
     );
   }
 
@@ -637,6 +694,15 @@ const EmailWriter = () => {
         </div>
         <Footer/>
       </div>
+      {/* Feedback Modals */}
+      {showGenerationFeedback && (
+        <EmailGenerationFeedback
+          onClose={() => setShowGenerationFeedback(false)}
+          emailData={generatedEmail}
+          provider={selectedProvider}
+          onSubmit={handleGenerationFeedback}
+        />
+      )}
     </div>
   );
 };

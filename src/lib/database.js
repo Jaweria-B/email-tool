@@ -80,6 +80,20 @@ const initializeSchema = async () => {
       )
     `;
 
+    // Create feedback table
+    await sql`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        feedback_type TEXT NOT NULL,
+        feedback_data TEXT NOT NULL,
+        ai_provider TEXT,
+        email_sent BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+      )
+    `;
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database tables:', error);
@@ -294,6 +308,82 @@ export const apiKeysDb = {
   // Delete API key
   delete: async (userId, provider) => {
     const result = await sql`DELETE FROM user_api_keys WHERE user_id = ${userId} AND provider = ${provider}`;
+    return result;
+  }
+};
+
+// Feedback operations
+export const feedbackDb = {
+  // Create feedback entry
+  create: async (feedbackData) => {
+    const result = await sql`
+      INSERT INTO feedback 
+      (user_id, feedback_type, feedback_data, ai_provider, email_sent)
+      VALUES (${feedbackData.user_id}, ${feedbackData.feedback_type}, ${JSON.stringify(feedbackData.feedback_data)}, ${feedbackData.ai_provider}, ${feedbackData.email_sent})
+      RETURNING id
+    `;
+    return { id: result[0].id };
+  },
+
+  // Get feedback by user
+  getByUser: async (userId, feedbackType = null, limit = 50) => {
+    let query;
+    if (feedbackType) {
+      query = sql`
+        SELECT * FROM feedback 
+        WHERE user_id = ${userId} AND feedback_type = ${feedbackType}
+        ORDER BY created_at DESC 
+        LIMIT ${limit}
+      `;
+    } else {
+      query = sql`
+        SELECT * FROM feedback 
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC 
+        LIMIT ${limit}
+      `;
+    }
+    
+    const result = await query;
+    // Parse feedback_data JSON for each result
+    return result.map(row => ({
+      ...row,
+      feedback_data: JSON.parse(row.feedback_data)
+    }));
+  },
+
+  // Get all feedback for analytics
+  getAll: async (limit = 100, offset = 0) => {
+    const result = await sql`
+      SELECT f.*, u.name as user_name, u.email as user_email
+      FROM feedback f
+      LEFT JOIN users u ON f.user_id = u.id
+      ORDER BY f.created_at DESC 
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    
+    return result.map(row => ({
+      ...row,
+      feedback_data: JSON.parse(row.feedback_data)
+    }));
+  },
+
+  // Get feedback stats
+  getStats: async () => {
+    const totalFeedback = await sql`SELECT COUNT(*) as count FROM feedback`;
+    const generationFeedback = await sql`SELECT COUNT(*) as count FROM feedback WHERE feedback_type = 'email_generation'`;
+    const senderFeedback = await sql`SELECT COUNT(*) as count FROM feedback WHERE feedback_type = 'email_sender'`;
+    
+    return {
+      total: totalFeedback[0].count,
+      email_generation: generationFeedback[0].count,
+      email_sender: senderFeedback[0].count
+    };
+  },
+
+  // Delete feedback
+  delete: async (id) => {
+    const result = await sql`DELETE FROM feedback WHERE id = ${id}`;
     return result;
   }
 };
