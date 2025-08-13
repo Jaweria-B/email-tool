@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Put into src/index.css or your global stylesheet */
+.email-sender select {
+  /* Keep the closed select text white (matches theme) */
+  color: #ffffff;
+}
+
+/* Ensure the open dropdown items are readable */
+.email-sender select option,
+.email-sender option {
+  color: #111827 !important;        /* dark text for options */
+  background-color: #ffffff !important; /* white background for options */
+}
+
+/* optional: ensure custom class also works on option elements */
+.email-sender .dropdown-option {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+

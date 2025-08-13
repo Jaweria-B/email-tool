@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff, User, Server } from 'lucide-react';
+// Add this near other imports at the top of EmailSender.js
+import * as XLSX from 'xlsx'; // npm install xlsx
 
 const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [emailList, setEmailList] = useState(['']);
@@ -139,21 +141,44 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
     if (!file) return;
 
     setFileProcessing(true);
-    
+
     try {
-      const text = await file.text();
       let emails = [];
 
+      // CSV
       if (file.name.endsWith('.csv')) {
+        const text = await file.text();
         emails = parseCSV(text);
-      } else if (file.name.endsWith('.txt')) {
+      }
+      // Plain text
+      else if (file.name.endsWith('.txt')) {
+        const text = await file.text();
         emails = extractEmailsFromText(text);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        // For Excel files, we'll treat them as CSV for now
-        // In a real implementation, you'd use a library like SheetJS
-        emails = parseCSV(text);
-      } else {
-        // Try to extract emails from any text file
+      }
+      // Excel (xlsx / xls) using SheetJS
+      else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        // read as arrayBuffer and parse workbook
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        // iterate sheets and rows
+        workbook.SheetNames.forEach(sheetName => {
+          const worksheet = workbook.Sheets[sheetName];
+          // convert to rows array (each row is an array of cell values)
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+          rows.forEach(row => {
+            row.forEach(cell => {
+              if (cell !== null && cell !== undefined && String(cell).trim() !== '') {
+                const found = extractEmailsFromText(String(cell));
+                if (found && found.length) emails.push(...found);
+              }
+            });
+          });
+        });
+        emails = [...new Set(emails)]; // unique
+      }
+      // Unknown type: fallback to text extraction
+      else {
+        const text = await file.text();
         emails = extractEmailsFromText(text);
       }
 
@@ -168,10 +193,10 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
       alert('Error processing file. Please try again.');
     } finally {
       setFileProcessing(false);
-      // Reset file input
       event.target.value = '';
     }
   };
+
 
   const processBulkEmails = () => {
     let emails = [];
@@ -305,7 +330,7 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const displayedEmails = showAllEmails ? emailList : emailList.slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
+    <div className="email-sender bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -616,17 +641,17 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
                       Email Provider
                     </label>
                     <select
-                      value={smtpConfig.provider}
-                      onChange={(e) => handleProviderChange(e.target.value)}
-                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
-                    >
-                      <option value="gmail">Gmail</option>
-                      <option value="outlook">Outlook/Hotmail</option>
-                      <option value="yahoo">Yahoo Mail</option>
-                      <option value="hostinger">Hostinger</option>
-                      <option value="godaddy">GoDaddy</option>
-                      <option value="custom">Custom SMTP</option>
-                    </select>
+                    value={smtpConfig.provider}
+                    onChange={(e) => handleProviderChange(e.target.value)}
+                    className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                  >
+                    <option value="gmail">Gmail</option>
+                    <option value="outlook">Outlook/Hotmail</option>
+                    <option value="yahoo">Yahoo Mail</option>
+                    <option value="hostinger">Hostinger</option>
+                    <option value="godaddy">GoDaddy</option>
+                    <option value="custom">Custom SMTP</option>
+                  </select>
                   </div>
 
                   {smtpConfig.useCustom && (
