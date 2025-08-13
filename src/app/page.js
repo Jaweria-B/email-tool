@@ -11,6 +11,7 @@ import { useEffect, useCallback  } from 'react';
 import Footer from '@/components/Footer';
 import EmailGenerationFeedback from '@/components/EmailGenerationFeedback';
 import EmailSenderFeedback from '@/components/EmailSenderFeedback';
+import FloatingGenerationGuide from '@/components/GenerationGuide';
 
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
@@ -51,7 +52,7 @@ const EmailWriter = () => {
     loadUserData();
   }, []);
 
-  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.QWEN);
+  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.GEMINI);
   const [apiKeys, setApiKeys] = useState({
     [AI_PROVIDERS.QWEN]: '',
     [AI_PROVIDERS.OPENAI]: '',
@@ -287,7 +288,7 @@ const EmailWriter = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           {/* Profile/Auth Section - Top Right */}
           <div className="fixed top-6 right-6 z-50">
             {!isLoadingUser && user ? (
@@ -366,30 +367,16 @@ const EmailWriter = () => {
           <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
             Email<span className="bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">Craft</span>
           </h1>
-          <p className="text-purple-100 text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-purple-100 text-xl max-w-2xl mx-auto leading-relaxed mb-6">
             Transform your thoughts into perfectly crafted emails with multiple AI providers
           </p>
-          
-          {/* Settings Button */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="my-6 bg-white/20 backdrop-blur-lg text-white px-6 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2 mx-auto"
-          >
-            <Settings className="h-4 w-4" />
-            API Settings
-          </button>
-
-          {/* Settings Panel */}
-          {showSettings && (
-            <div className="mb-8">
-              <ApiSettings
-                selectedProvider={selectedProvider}
-                apiKeys={apiKeys}
-                onApiKeyChange={handleApiKeyChange}
-              />
-            </div>
-          )}
         </div>
+
+          <ApiSettings
+            selectedProvider={selectedProvider}
+            apiKeys={apiKeys}
+            onApiKeyChange={handleApiKeyChange}
+          />
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Input Section */}
@@ -703,6 +690,8 @@ const EmailWriter = () => {
           onSubmit={handleGenerationFeedback}
         />
       )}
+      
+      <FloatingGenerationGuide />
     </div>
   );
 };

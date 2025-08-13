@@ -24,25 +24,25 @@ export const AI_PROVIDER_INFO = {
   [AI_PROVIDERS.QWEN]: {
     name: 'QWEN (AIML)',
     description: 'Powered by QWEN-Max via AIML API',
-    keyFormat: 'API Key (without Bearer prefix)',
+    keyFormat: 'API Key',
     website: 'https://aimlapi.com'
   },
   [AI_PROVIDERS.OPENAI]: {
     name: 'OpenAI GPT-4o Mini',
     description: 'OpenAI\'s efficient GPT-4o Mini model',
-    keyFormat: 'API Key (sk-...)',
+    keyFormat: '(sk-...)',
     website: 'https://platform.openai.com'
   },
   [AI_PROVIDERS.DEEPSEEK]: {
     name: 'DeepSeek',
     description: 'DeepSeek\'s latest chat model',
-    keyFormat: 'API Key (sk-...)',
+    keyFormat: '(sk-...)',
     website: 'https://platform.deepseek.com'
   },
   [AI_PROVIDERS.GEMINI]: {
     name: 'Google Gemini',
     description: 'Google\'s Gemini 2.0 Flash model',
-    keyFormat: 'API Key (AI...)',
+    keyFormat: '(AI...)',
     website: 'https://ai.google.dev'
   }
 };
