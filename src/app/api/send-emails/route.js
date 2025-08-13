@@ -86,7 +86,7 @@ export async function POST(request) {
     for (const email of emails) {
       try {
         const mailOptions = {
-          from: `"${smtpConfig.fromName || 'Email Sender'}" <${smtpConfig.auth.user}>`,
+          from: `"${smtpConfig.fromName || ''}" <${smtpConfig.auth.user}>`,
           to: email,
           subject: subject,
           text: body,
