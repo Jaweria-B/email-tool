@@ -12,6 +12,7 @@ import Footer from '@/components/Footer';
 import EmailGenerationFeedback from '@/components/EmailGenerationFeedback';
 import EmailSenderFeedback from '@/components/EmailSenderFeedback';
 import FloatingGenerationGuide from '@/components/GenerationGuide';
+import EmailOpener from '@/components/EmailOpener';
 
 const EmailWriter = () => {
   const [user, setUser] = useState(null);
@@ -653,6 +654,11 @@ const EmailWriter = () => {
                       {generatedEmail.body}
                     </div>
                   </div>
+                  <EmailOpener
+                    subject={generatedEmail.subject}
+                    body={generatedEmail.body}
+                    recipient={formData.recipient}
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-purple-200">
