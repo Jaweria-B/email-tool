@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff } from 'lucide-react';
+import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff, User, Server } from 'lucide-react';
 
 const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [emailList, setEmailList] = useState(['']);
   const [emailConfig, setEmailConfig] = useState({
+    subject: subject || 'Collaboration Opportunity',
+    greetingTemplate: 'Dear Sir/Madam,' // Greeting template
+  });
+  
+  const [smtpConfig, setSmtpConfig] = useState({
     fromEmail: '',
     fromPassword: '',
-    subject: subject || 'Collaboration Opportunity'
+    provider: 'gmail', // default to Gmail
+    customProvider: '',
+    port: 587,
+    method: 'TLS',
+    useCustom: false
   });
+  
   const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState([]);
-  const [showConfig, setShowConfig] = useState(false);
+  const [showEmailConfig, setShowEmailConfig] = useState(false);
+  const [showSmtpConfig, setShowSmtpConfig] = useState(false);
   const [bulkEmailText, setBulkEmailText] = useState('');
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [extractedEmails, setExtractedEmails] = useState([]);
@@ -19,12 +30,68 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [fileProcessing, setFileProcessing] = useState(false);
   const [showAllEmails, setShowAllEmails] = useState(false);
 
+  // Predefined SMTP providers
+  const smtpProviders = {
+    gmail: { host: 'smtp.gmail.com', port: 587, secure: false },
+    outlook: { host: 'smtp-mail.outlook.com', port: 587, secure: false },
+    yahoo: { host: 'smtp.mail.yahoo.com', port: 587, secure: false },
+    hostinger: { host: 'smtp.hostinger.com', port: 465, secure: true },
+    godaddy: { host: 'smtpout.secureserver.net', port: 465, secure: true },
+    custom: { host: '', port: 587, secure: false }
+  };
+
   // Update subject when prop changes
   useEffect(() => {
     if (subject) {
       setEmailConfig(prev => ({ ...prev, subject }));
     }
   }, [subject]);
+
+  // Function to replace recipient name in email body
+  const getPersonalizedEmailBody = () => {
+    if (!body) return '';
+    
+    // Common greeting patterns to replace - more comprehensive patterns
+    const greetingPatterns = [
+      /^Dear[^,\n]*[,\n]/gim,
+      /^Hello[^,\n]*[,\n]/gim,
+      /^Hi[^,\n]*[,\n]/gim,
+      /^Good morning[^,\n]*[,\n]/gim,
+      /^Good afternoon[^,\n]*[,\n]/gim,
+      /^Good evening[^,\n]*[,\n]/gim,
+      /^Greetings[^,\n]*[,\n]/gim,
+      /\[Recipient Name\]/gi,
+      /\[Name\]/gi,
+      /\[RECIPIENT\]/gi
+    ];
+
+    let personalizedBody = body;
+    
+    // Replace greeting patterns with the user's custom greeting template
+    let greetingReplaced = false;
+    
+    greetingPatterns.forEach(pattern => {
+      if (personalizedBody.match(pattern)) {
+        personalizedBody = personalizedBody.replace(pattern, emailConfig.greetingTemplate + '');
+        greetingReplaced = true;
+      }
+    });
+
+    // If no greeting pattern found, check if the first line looks like a greeting
+    if (!greetingReplaced) {
+      const lines = personalizedBody.split('\n');
+      if (lines.length > 0) {
+        const firstLine = lines[0].trim();
+        // Check if first line contains common greeting words
+        if (firstLine.match(/^(dear|hello|hi|greetings|good morning|good afternoon|good evening)/i)) {
+          lines[0] = emailConfig.greetingTemplate;
+          personalizedBody = lines.join('\n');
+        }
+      }
+    }
+
+    return personalizedBody;
+  };
 
   const addEmailField = () => {
     setEmailList([...emailList, '']);
@@ -134,6 +201,17 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
     setImportMethod('text');
   };
 
+  const handleProviderChange = (provider) => {
+    const providerConfig = smtpProviders[provider];
+    setSmtpConfig(prev => ({
+      ...prev,
+      provider,
+      port: providerConfig.port,
+      method: providerConfig.secure ? 'SSL' : 'TLS',
+      useCustom: provider === 'custom'
+    }));
+  };
+
   const sendEmails = async () => {
     const validEmails = emailList.filter(email => email && validateEmail(email));
     
@@ -147,10 +225,29 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
       return;
     }
 
+    if (!smtpConfig.fromEmail || !smtpConfig.fromPassword) {
+      alert('Please configure your SMTP settings first.');
+      return;
+    }
+
     setSending(true);
     setSendResults([]);
 
     try {
+      // Get personalized email body
+      const personalizedBody = getPersonalizedEmailBody();
+      
+      // Prepare SMTP configuration
+      const smtpSettings = {
+        host: smtpConfig.useCustom ? smtpConfig.customProvider : smtpProviders[smtpConfig.provider].host,
+        port: smtpConfig.port,
+        secure: smtpConfig.method === 'SSL',
+        auth: {
+          user: smtpConfig.fromEmail,
+          pass: smtpConfig.fromPassword
+        }
+      };
+      
       // Send emails via API
       const response = await fetch('/api/send-emails', {
         method: 'POST',
@@ -160,9 +257,8 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
         body: JSON.stringify({
           emails: validEmails,
           subject: emailConfig.subject,
-          body: body,
-          fromEmail: emailConfig.fromEmail,
-          fromPassword: emailConfig.fromPassword
+          body: personalizedBody,
+          smtpConfig: smtpSettings
         }),
       });
 
@@ -458,37 +554,15 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
             {/* Email Configuration */}
             <div className="mt-6">
               <button
-                onClick={() => setShowConfig(!showConfig)}
+                onClick={() => setShowEmailConfig(!showEmailConfig)}
                 className="w-full bg-white/20 backdrop-blur-lg text-white py-3 px-4 rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <Settings className="h-4 w-4" />
+                <Mail className="h-4 w-4" />
                 Email Configuration
               </button>
 
-              {showConfig && (
+              {showEmailConfig && (
                 <div className="mt-4 space-y-4">
-                  <div>
-                    <label className="block text-purple-100 text-sm font-medium mb-2">
-                      From Email
-                    </label>
-                    <input
-                      type="email"
-                      value={emailConfig.fromEmail}
-                      onChange={(e) => setEmailConfig({...emailConfig, fromEmail: e.target.value})}
-                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-purple-100 text-sm font-medium mb-2">
-                      App Password
-                    </label>
-                    <input
-                      type="password"
-                      value={emailConfig.fromPassword}
-                      onChange={(e) => setEmailConfig({...emailConfig, fromPassword: e.target.value})}
-                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
-                    />
-                  </div>
                   <div>
                     <label className="block text-purple-100 text-sm font-medium mb-2">
                       Subject Line
@@ -497,8 +571,143 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
                       type="text"
                       value={emailConfig.subject}
                       onChange={(e) => setEmailConfig({...emailConfig, subject: e.target.value})}
+                      placeholder="Enter email subject"
                       className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
                     />
+                  </div>
+                  <div>
+                    <label className="text-purple-100 text-sm font-medium mb-2 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Greeting Template
+                    </label>
+                    <input
+                      type="text"
+                      value={emailConfig.greetingTemplate}
+                      onChange={(e) => setEmailConfig({...emailConfig, greetingTemplate: e.target.value})}
+                      placeholder="e.g., Dear Sir/Madam, Hello [Name], Hi there, etc."
+                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                    />
+                    <div className="mt-2 text-purple-200 text-xs">
+                      This greeting will replace the opening line of your email
+                    </div>
+                    <div className="mt-2 p-2 bg-white/10 rounded-lg border border-white/20">
+                      <div className="text-purple-200 text-xs mb-1">Recipients will be addressed as:</div>
+                      <div className="text-white text-sm font-medium">{emailConfig.greetingTemplate}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SMTP Configuration */}
+            <div className="mt-6">
+              <button
+                onClick={() => setShowSmtpConfig(!showSmtpConfig)}
+                className="w-full bg-white/20 backdrop-blur-lg text-white py-3 px-4 rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Server className="h-4 w-4" />
+                SMTP Server Settings
+              </button>
+
+              {showSmtpConfig && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-purple-100 text-sm font-medium mb-2">
+                      Email Provider
+                    </label>
+                    <select
+                      value={smtpConfig.provider}
+                      onChange={(e) => handleProviderChange(e.target.value)}
+                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                    >
+                      <option value="gmail">Gmail</option>
+                      <option value="outlook">Outlook/Hotmail</option>
+                      <option value="yahoo">Yahoo Mail</option>
+                      <option value="hostinger">Hostinger</option>
+                      <option value="godaddy">GoDaddy</option>
+                      <option value="custom">Custom SMTP</option>
+                    </select>
+                  </div>
+
+                  {smtpConfig.useCustom && (
+                    <div>
+                      <label className="block text-purple-100 text-sm font-medium mb-2">
+                        Custom SMTP Host
+                      </label>
+                      <input
+                        type="text"
+                        value={smtpConfig.customProvider}
+                        onChange={(e) => setSmtpConfig({...smtpConfig, customProvider: e.target.value})}
+                        placeholder="smtp.example.com"
+                        className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-purple-100 text-sm font-medium mb-2">
+                        Port
+                      </label>
+                      <input
+                        type="number"
+                        value={smtpConfig.port}
+                        onChange={(e) => setSmtpConfig({...smtpConfig, port: parseInt(e.target.value)})}
+                        className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-purple-100 text-sm font-medium mb-2">
+                        Security Method
+                      </label>
+                      <select
+                        value={smtpConfig.method}
+                        onChange={(e) => setSmtpConfig({...smtpConfig, method: e.target.value})}
+                        className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                      >
+                        <option value="TLS">TLS (STARTTLS)</option>
+                        <option value="SSL">SSL/TLS</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-purple-100 text-sm font-medium mb-2">
+                      From Email
+                    </label>
+                    <input
+                      type="email"
+                      value={smtpConfig.fromEmail}
+                      onChange={(e) => setSmtpConfig({...smtpConfig, fromEmail: e.target.value})}
+                      placeholder="your.email@example.com"
+                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-purple-100 text-sm font-medium mb-2">
+                      App Password / SMTP Password
+                    </label>
+                    <input
+                      type="password"
+                      value={smtpConfig.fromPassword}
+                      onChange={(e) => setSmtpConfig({...smtpConfig, fromPassword: e.target.value})}
+                      placeholder="Enter your app password"
+                      className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+                    />
+                    <div className="mt-2 text-purple-200 text-xs">
+                      For Gmail: Use App Password. For custom SMTP: Use your email password or SMTP credentials.
+                    </div>
+                  </div>
+
+                  {/* Current Settings Preview */}
+                  <div className="mt-4 p-3 bg-white/10 rounded-lg border border-white/20">
+                    <div className="text-purple-200 text-xs mb-2">Current SMTP Configuration:</div>
+                    <div className="text-white text-sm space-y-1">
+                      <div>Host: {smtpConfig.useCustom ? smtpConfig.customProvider : smtpProviders[smtpConfig.provider].host}</div>
+                      <div>Port: {smtpConfig.port}</div>
+                      <div>Security: {smtpConfig.method}</div>
+                      <div>Email: {smtpConfig.fromEmail || 'Not configured'}</div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -507,7 +716,7 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
             {/* Send Button */}
             <button
               onClick={sendEmails}
-              disabled={sending || validEmailCount === 0}
+              disabled={sending || validEmailCount === 0 || !smtpConfig.fromEmail || !smtpConfig.fromPassword}
               className="w-full mt-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 shadow-lg"
             >
               {sending ? (
@@ -522,6 +731,16 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
                 </>
               )}
             </button>
+
+            {/* Configuration Status */}
+            {(!smtpConfig.fromEmail || !smtpConfig.fromPassword) && (
+              <div className="mt-3 p-3 bg-yellow-500/20 border border-yellow-400/30 rounded-lg">
+                <div className="flex items-center gap-2 text-yellow-200 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  Please configure your SMTP settings to send emails
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Email Preview & Results */}
@@ -537,10 +756,11 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
                 <div className="text-purple-200 text-sm mb-2">Subject:</div>
                 <div className="text-white font-medium">{emailConfig.subject}</div>
               </div>
+              
               <div className="border-t border-white/20 pt-4">
-                <div className="text-purple-200 text-sm mb-2">Email Body:</div>
+                <div className="text-purple-200 text-sm mb-2">Email Body (with personalized greeting):</div>
                 <div className="text-white text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-                  {body || 'No email content available. Please generate an email first.'}
+                  {getPersonalizedEmailBody() || 'No email content available. Please generate an email first.'}
                 </div>
               </div>
             </div>
