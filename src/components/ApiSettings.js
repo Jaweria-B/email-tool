@@ -193,7 +193,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
         {/* Generation Guide Link */}
         <div className="mt-6 pt-4 border-t border-white/20">
           <a
-            href="https://preview--mailcraft-ai-hub.lovable.app/guide"
+            href="https://uinfo.org/email-craft/emailcraft-sending-guide/"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-white/20 hover:bg-white/30 text-white py-2.5 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm font-medium border border-white/30"

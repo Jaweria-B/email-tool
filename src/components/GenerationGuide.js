@@ -196,7 +196,7 @@ const FloatingGenerationGuide = () => {
             {/* Action Buttons */}
             <div className="flex gap-3">
               <a
-                href="https://preview--mailcraft-ai-hub.lovable.app/guide"
+                href="https://uinfo.org/email-craft/emailcraft-sending-guide/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-medium"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Plus, X, Mail, Users, Settings, ArrowLeft, Check, AlertCircle, Upload, Download, FileText, Eye, EyeOff, User, Server } from 'lucide-react';
-// Add this near other imports at the top of EmailSender.js
-import * as XLSX from 'xlsx'; // npm install xlsx
+import * as XLSX from 'xlsx'; 
+import SenderGuide from './SenderGuide';
 
 const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [emailList, setEmailList] = useState(['']);
@@ -9,6 +9,7 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
     subject: subject || 'Collaboration Opportunity',
     greetingTemplate: 'Dear Sir/Madam,' // Greeting template
   });
+  const [showQuickGuide, setShowQuickGuide] = useState(false);
   
   const [smtpConfig, setSmtpConfig] = useState({
     fromEmail: '',
@@ -28,7 +29,7 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [extractedEmails, setExtractedEmails] = useState([]);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
-  const [importMethod, setImportMethod] = useState('text'); // 'text' or 'file'
+  const [importMethod, setImportMethod] = useState('text'); 
   const [fileProcessing, setFileProcessing] = useState(false);
   const [showAllEmails, setShowAllEmails] = useState(false);
 
@@ -47,6 +48,11 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
     if (subject) {
       setEmailConfig(prev => ({ ...prev, subject }));
     }
+    const timer = setTimeout(() => {
+      setShowQuickGuide(true);
+    }, 5000); // Small delay for better UX
+    
+    return () => clearTimeout(timer);
   }, [subject]);
 
   // Function to replace recipient name in email body
@@ -256,7 +262,7 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
     }
 
     setSending(true);
-    setSendResults([]);
+    setSendResults([]); // Clear previous results
 
     try {
       // Get personalized email body
@@ -287,8 +293,14 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
         }),
       });
 
-      const results = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       
+      // Extract results from the response structure
+      const results = data.results || [];
       setSendResults(results);
       
       // Check if any emails were sent successfully
@@ -302,7 +314,11 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
       
     } catch (error) {
       console.error('Error sending emails:', error);
-      const errorResults = [{ error: 'Failed to send emails. Please try again.' }];
+      const errorResults = validEmails.map(email => ({
+        email: email,
+        success: false,
+        error: error.message || 'Failed to send email'
+      }));
       setSendResults(errorResults);
       
       // Call callback with false since sending failed
@@ -818,6 +834,11 @@ const EmailSender = ({ subject, body, onBack, onEmailSent }) => {
           </div>
         </div>
       </div>
+      {/* Quick Guide Component */}
+      <SenderGuide 
+        isOpen={showQuickGuide} 
+        onToggle={() => setShowQuickGuide(!showQuickGuide)} 
+      />
     </div>
   );
 };

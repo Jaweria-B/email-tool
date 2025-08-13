@@ -2,6 +2,18 @@
 import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
 
+// Helper function to create delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to divide array into batches
+const createBatches = (array, batchSize) => {
+  const batches = [];
+  for (let i = 0; i < array.length; i += batchSize) {
+    batches.push(array.slice(i, i + batchSize));
+  }
+  return batches;
+};
+
 export async function POST(request) {
   try {
     const { emails, subject, body, smtpConfig } = await request.json();
@@ -61,10 +73,10 @@ export async function POST(request) {
       }
     }
 
-    console.log('Creating transporter with config:', {
-      ...transporterConfig,
-      auth: { user: transporterConfig.auth.user, pass: '[HIDDEN]' }
-    });
+    // console.log('Creating transporter with config:', {
+    //   ...transporterConfig,
+    //   auth: { user: transporterConfig.auth.user, pass: '[HIDDEN]' }
+    // });
 
     const transporter = nodemailer.createTransport(transporterConfig);
 
@@ -80,37 +92,88 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
+    // Configuration for batching
+    const BATCH_SIZE = 30; // Send emails in batches of 30
+    const BATCH_DELAY = 5000; // 5 second delay between batches
+    const EMAIL_DELAY = 0; // 200ms delay between individual emails within a batch
+
+    // Divide emails into batches
+    const emailBatches = createBatches(emails, BATCH_SIZE);
     const results = [];
 
-    // Send emails one by one
-    for (const email of emails) {
-      try {
-        const mailOptions = {
-          from: `"${smtpConfig.fromName || ''}" <${smtpConfig.auth.user}>`,
-          to: email,
-          subject: subject,
-          text: body,
-          html: body.replace(/\n/g, '<br>'), // Convert line breaks to HTML
-        };
+    // console.log(`Processing ${emails.length} emails in ${emailBatches.length} batches of ${BATCH_SIZE}`);
 
-        await transporter.sendMail(mailOptions);
-        console.log(`Email sent successfully to ${email}`);
+    // Process each batch
+    for (let batchIndex = 0; batchIndex < emailBatches.length; batchIndex++) {
+      const batch = emailBatches[batchIndex];
+      const batchNumber = batchIndex + 1;
+      
+      // console.log(`Processing batch ${batchNumber}/${emailBatches.length} with ${batch.length} emails`);
+
+      // Process emails in current batch
+      for (let emailIndex = 0; emailIndex < batch.length; emailIndex++) {
+        const email = batch[emailIndex];
         
-        results.push({
-          email: email,
-          success: true,
-        });
-      } catch (error) {
-        console.error(`Error sending email to ${email}:`, error);
-        results.push({
-          email: email,
-          success: false,
-          error: error.message,
-        });
+        try {
+          const mailOptions = {
+            from: `"${smtpConfig.fromName || ''}" <${smtpConfig.auth.user}>`,
+            to: email,
+            subject: subject,
+            text: body,
+            html: body.replace(/\n/g, '<br>'), // Convert line breaks to HTML
+          };
+
+          await transporter.sendMail(mailOptions);
+          // console.log(`✓ Email sent successfully to ${email}`);
+          
+          results.push({
+            email: email,
+            success: true,
+            batch: batchNumber,
+            batchPosition: emailIndex + 1,
+            timestamp: new Date().toISOString()
+          });
+
+        } catch (error) {
+          // console.error(`✗ Error sending email to ${email}:`, error.message);
+          results.push({
+            email: email,
+            success: false,
+            error: error.message,
+            batch: batchNumber,
+            batchPosition: emailIndex + 1,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
+      // console.log(`Batch ${batchNumber}/${emailBatches.length} completed`);
+
+      // Add delay between batches (except after the last batch)
+      if (batchIndex < emailBatches.length - 1) {
+        // console.log(`Waiting ${BATCH_DELAY / 1000} seconds before next batch...`);
+        await delay(BATCH_DELAY);
       }
     }
 
-    return NextResponse.json(results);
+    // Calculate summary statistics
+    const successfulEmails = results.filter(r => r.success).length;
+    const failedEmails = results.filter(r => !r.success).length;
+    
+    // console.log(`Email sending completed: ${successfulEmails} successful, ${failedEmails} failed out of ${emails.length} total`);
+
+    // Return the results in the expected format
+    return NextResponse.json({
+      results: results,
+      summary: {
+        total: emails.length,
+        successful: successfulEmails,
+        failed: failedEmails,
+        batches: emailBatches.length,
+        batchSize: BATCH_SIZE
+      }
+    });
+
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ 
