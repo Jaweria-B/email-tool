@@ -262,8 +262,15 @@ export const emailActivityDb = {
   updateStatus: async (id, status) => {
     const result = await sql`UPDATE email_activity SET status = ${status} WHERE id = ${id}`;
     return result;
+  },
+  
+  // Get total count of generated emails
+  getTotalCount: async () => {
+    const result = await sql`SELECT COUNT(*) as count FROM email_activity`;
+    return parseInt(result[0].count);
   }
 };
+
 
 // API Keys operations
 export const apiKeysDb = {
