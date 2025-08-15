@@ -332,17 +332,17 @@ const EmailWriter = () => {
                   )}
                 </div>
               ) : !isLoadingUser ? (
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => router.push('/login')}
-                    className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2"
+                    className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2 justify-center"
                   >
                     <LogIn className="h-4 w-4" />
                     Sign In
                   </button>
                   <button
                     onClick={() => router.push('/register')}
-                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2"
+                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 justify-center"
                   >
                     <UserPlus className="h-4 w-4" />
                     Register
@@ -600,65 +600,79 @@ const EmailWriter = () => {
           </div>
 
           {/* Output Section */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Send className="h-6 w-6" />
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl border border-white/20 p-4 sm:p-6 lg:p-8 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                <Send className="h-5 w-5 sm:h-6 sm:w-6" />
                 Generated Email
               </h2>
-              <div className="flex gap-2">
+              
+              {/* Action buttons - responsive layout */}
+              <div className="flex flex-col xs:flex-row gap-2 sm:gap-2">
                 {(generatedEmail.subject || generatedEmail.body) && (
                   <>
                     <button
                       onClick={copyToClipboard}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                      className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-xl transition-all duration-300 text-sm sm:text-base min-w-0 ${
                         copySuccess
                           ? 'bg-green-500/50 text-green-100'
                           : 'bg-white/20 hover:bg-white/30 text-white'
                       }`}
                     >
-                      <Copy className="h-4 w-4" />
-                      {copySuccess ? 'Copied!' : 'Copy'}
+                      <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="xs:inline">{copySuccess ? 'Copied!' : 'Copy'}</span>
                     </button>
                     <button
                       onClick={openEmailSender}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white transition-all duration-300"
+                      className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white transition-all duration-300 text-sm sm:text-base min-w-0"
                     >
-                      <Send className="h-4 w-4" />
-                      Send Email
+                      <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="xs:inline">Send Email</span>
                     </button>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 min-h-[400px]">
+            {/* Email content area */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-white/20 p-3 sm:p-4 lg:p-6 min-h-[300px] sm:min-h-[400px]">
               {generatedEmail.subject || generatedEmail.body ? (
-                <div className="text-white space-y-4">
+                <div className="text-white space-y-3 sm:space-y-4">
+                  {/* Subject section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-purple-200 mb-2">Subject:</h3>
-                    <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-                      {generatedEmail.subject}
+                    <h3 className="text-base sm:text-lg font-semibold text-purple-200 mb-2">Subject:</h3>
+                    <div className="bg-white/10 rounded-lg p-2 sm:p-3 border border-white/20 break-words">
+                      <p className="text-sm sm:text-base leading-relaxed">{generatedEmail.subject}</p>
                     </div>
                   </div>
+                  
+                  {/* Email body section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-purple-200 mb-2">Email Body:</h3>
-                    <div className="bg-white/10 rounded-lg p-3 border border-white/20 whitespace-pre-wrap leading-relaxed">
-                      {generatedEmail.body}
+                    <h3 className="text-base sm:text-lg font-semibold text-purple-200 mb-2">Email Body:</h3>
+                    <div className="bg-white/10 rounded-lg p-2 sm:p-3 border border-white/20 overflow-hidden">
+                      <div className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
+                        {generatedEmail.body}
+                      </div>
                     </div>
                   </div>
-                  <EmailOpener
-                    subject={generatedEmail.subject}
-                    body={generatedEmail.body}
-                    recipient={formData.recipient}
-                  />
+                  
+                  {/* Email opener component */}
+                  <div className="pt-2">
+                    <EmailOpener
+                      subject={generatedEmail.subject}
+                      body={generatedEmail.body}
+                      recipient={formData.recipient}
+                    />
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-purple-200">
-                  <div className="text-center">
-                    <Mail className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">Your generated email will appear here</p>
-                    <p className="text-sm opacity-75">Select an AI provider, fill in the details and click "Generate Email"</p>
+                <div className="flex items-center justify-center h-full text-purple-200 px-4">
+                  <div className="text-center max-w-sm">
+                    <Mail className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 opacity-50" />
+                    <p className="text-base sm:text-lg mb-2">Your generated email will appear here</p>
+                    <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+                      Select an AI provider, fill in the details and click "Generate Email"
+                    </p>
                   </div>
                 </div>
               )}
