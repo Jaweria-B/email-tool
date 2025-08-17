@@ -78,7 +78,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative mt-20 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 overflow-hidden">
+    <footer className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 overflow-hidden">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingElements.map((element) => (

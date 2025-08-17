@@ -274,6 +274,7 @@ const EmailWriter = () => {
             }, 1000);
           }}
         />
+        <Footer/>
         {/* Render sender feedback on top of sender page */}
         {showSenderFeedback && (
           <EmailSenderFeedback
@@ -300,7 +301,7 @@ const EmailWriter = () => {
                     className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2"
                   >
                     <User className="h-4 w-4" />
-                    {user.name}
+                    <span className="hidden sm:inline">{user.name}</span>
                   </button>
                   
                   {/* Profile Dropdown */}
@@ -608,7 +609,7 @@ const EmailWriter = () => {
               </h2>
               
               {/* Action buttons - responsive layout */}
-              <div className="flex flex-col xs:flex-row gap-2 sm:gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
                 {(generatedEmail.subject || generatedEmail.body) && (
                   <>
                     <button
@@ -681,7 +682,7 @@ const EmailWriter = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12">
+        <div className="text-center my-12">
           <p className="text-purple-200 text-sm">
             Powered by {AI_PROVIDER_INFO[selectedProvider].name} • 
             <a href={AI_PROVIDER_INFO[selectedProvider].website} target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-white ml-1">
@@ -703,7 +704,6 @@ const EmailWriter = () => {
           onSubmit={handleGenerationFeedback}
         />
       )}
-      
       <FloatingGenerationGuide />
     </div>
   );

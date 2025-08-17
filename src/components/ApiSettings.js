@@ -84,7 +84,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
           className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2 shadow-lg"
         >
           <Settings className="h-4 w-4" />
-          API Settings
+          <span className="hidden sm:inline">API Settings</span>
         </button>
       </div>
     );
