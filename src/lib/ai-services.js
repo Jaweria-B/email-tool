@@ -50,7 +50,7 @@ export class EmailGenerationService {
       
       // If JSON parsing fails, return a structured object anyway
       return {
-        subject: formData.subject || 'Email Subject',
+        subject: 'Email Subject',
         body: response
       };
     }
@@ -65,11 +65,20 @@ export class EmailGenerationService {
       },
       body: JSON.stringify({
         model: AI_MODELS[AI_PROVIDERS.QWEN],
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+          },
+          {
+            role: 'user', 
+            content: prompt
+          }
+        ],
         temperature: 0.7,
         top_p: 0.7,
-        frequency_penalty: 0.5
+        frequency_penalty: 1,
+        top_k: 50
       })
     });
 
@@ -100,10 +109,7 @@ export class EmailGenerationService {
             role: 'user',
             content: prompt
           }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-        top_p: 0.9
+        ]
       })
     });
 
@@ -117,14 +123,14 @@ export class EmailGenerationService {
   }
 
   async generateWithDeepSeek(prompt) {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.DEEPSEEK], {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
       },
       body: JSON.stringify({
-        model: 'deepseek-chat', 
+        model: AI_MODELS[AI_PROVIDERS.DEEPSEEK],
         messages: [
           {
             role: 'system',
@@ -134,11 +140,7 @@ export class EmailGenerationService {
             role: 'user',
             content: prompt
           }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-        top_p: 0.9,
-        stream: false
+        ]
       })
     });
 
@@ -150,30 +152,30 @@ export class EmailGenerationService {
     const data = await response.json();
     return data.choices[0].message.content;
   }
-// sk-9849fc4495bc4f22a0b5cbf2bfe485d8
+
   async generateWithGemini(prompt) {
-    const response = await fetch(`${AI_ENDPOINTS[AI_PROVIDERS.GEMINI]}?key=${this.apiKey}`, {
+    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.GEMINI], {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`
       },
       body: JSON.stringify({
-        contents: [
+        model: AI_MODELS[AI_PROVIDERS.GEMINI],
+        messages: [
           {
-            parts: [
-              {
-                text: `You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user's requirements.\n\n${prompt}`
-              }
-            ]
+            role: 'system',
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+          },
+          {
+            role: 'user',
+            content: prompt
           }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.9,
-          maxOutputTokens: 1000,
-          responseMimeType: 'text/plain'
-        }
+        temperature: 0.7,
+        top_p: 0.7,
+        frequency_penalty: 1,
+        top_k: 50
       })
     });
 
@@ -183,7 +185,7 @@ export class EmailGenerationService {
     }
 
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    return data.choices[0].message.content;
   }
 }
 

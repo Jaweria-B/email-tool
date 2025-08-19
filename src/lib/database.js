@@ -395,5 +395,344 @@ export const feedbackDb = {
   }
 };
 
+// Add to the initializeSchema function
+const initializeBulkEmailSchema = async () => {
+  try {
+    // Create bulk email campaigns table
+    await sql`
+      CREATE TABLE IF NOT EXISTS bulk_email_campaigns (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        total_recipients INTEGER DEFAULT 0,
+        emails_sent INTEGER DEFAULT 0,
+        emails_failed INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'draft', -- draft, sending, completed, failed
+        agent_config TEXT, -- JSON string of agent configuration
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Create bulk email sends table for tracking individual emails
+    await sql`
+      CREATE TABLE IF NOT EXISTS bulk_email_sends (
+        id SERIAL PRIMARY KEY,
+        campaign_id INTEGER NOT NULL,
+        recipient_email TEXT NOT NULL,
+        recipient_name TEXT,
+        subject TEXT,
+        email_body TEXT,
+        personal_info TEXT, -- JSON string of personalization data
+        status TEXT DEFAULT 'pending', -- pending, sent, failed, bounced
+        message_id TEXT, -- Email service message ID
+        error_message TEXT,
+        sent_at TIMESTAMP,
+        opened_at TIMESTAMP, -- For future tracking
+        clicked_at TIMESTAMP, -- For future tracking
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaign_id) REFERENCES bulk_email_campaigns (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Create CSV uploads table for storing uploaded contact lists
+    await sql`
+      CREATE TABLE IF NOT EXISTS csv_uploads (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        filename TEXT NOT NULL,
+        original_filename TEXT,
+        file_size INTEGER,
+        total_rows INTEGER DEFAULT 0,
+        headers TEXT, -- JSON array of column headers
+        status TEXT DEFAULT 'processed', -- uploaded, processing, processed, failed
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Create email templates table for reusable templates
+    await sql`
+      CREATE TABLE IF NOT EXISTS email_templates (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        subject_template TEXT NOT NULL,
+        body_template TEXT NOT NULL,
+        variables TEXT, -- JSON array of required variables
+        category TEXT DEFAULT 'general',
+        is_public BOOLEAN DEFAULT FALSE,
+        usage_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `;
+
+    // Add indexes for better performance
+    await sql`CREATE INDEX IF NOT EXISTS idx_bulk_campaigns_user_id ON bulk_email_campaigns (user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_bulk_campaigns_status ON bulk_email_campaigns (status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_bulk_sends_campaign_id ON bulk_email_sends (campaign_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_bulk_sends_status ON bulk_email_sends (status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_csv_uploads_user_id ON csv_uploads (user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_email_templates_user_id ON email_templates (user_id)`;
+
+    console.log('Bulk email database schema initialized successfully');
+  } catch (error) {
+    console.error('Error initializing bulk email schema:', error);
+  }
+};
+
+// Bulk Email Campaign operations
+export const bulkEmailDb = {
+  // Create new campaign - FIXED VERSION
+  createCampaign: async (campaignData) => {
+    // Validate required fields
+    if (!campaignData.user_id) {
+      throw new Error('user_id is required for creating a campaign');
+    }
+
+    const result = await sql`
+      INSERT INTO bulk_email_campaigns 
+      (user_id, name, description, total_recipients, agent_config, status)
+      VALUES (${campaignData.user_id}, ${campaignData.name}, ${campaignData.description || ''}, 
+              ${campaignData.total_recipients || 0}, ${JSON.stringify(campaignData.agent_config || {})}, 
+              ${campaignData.status || 'draft'})
+      RETURNING id
+    `;
+    return result[0].id;
+  },
+
+  // Get campaigns by user
+  getCampaignsByUser: async (userId, limit = 50) => {
+    const result = await sql`
+      SELECT *, 
+             (emails_sent + emails_failed) as processed_count,
+             CASE 
+               WHEN total_recipients > 0 
+               THEN ROUND((emails_sent::decimal / total_recipients) * 100, 2) 
+               ELSE 0 
+             END as success_rate
+      FROM bulk_email_campaigns 
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC 
+      LIMIT ${limit}
+    `;
+    
+    return result.map(campaign => ({
+      ...campaign,
+      agent_config: JSON.parse(campaign.agent_config || '{}')
+    }));
+  },
+
+  // Update campaign - FIXED VERSION
+  updateCampaign: async (campaignId, updateData) => {
+    // Build the update query dynamically
+    const updateFields = [];
+    const values = [campaignId];
+    
+    Object.entries(updateData).forEach(([key, value], index) => {
+      updateFields.push(`${key} = $${index + 2}`);
+      values.push(value);
+    });
+    
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+    
+    const query = `
+      UPDATE bulk_email_campaigns 
+      SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    const result = await sql.unsafe(query, values);
+    return result[0];
+  },
+
+  // Log individual email send - ENHANCED VERSION
+  logEmailSend: async (sendData) => {
+    const result = await sql`
+      INSERT INTO bulk_email_sends 
+      (campaign_id, recipient_email, recipient_name, subject, email_body, 
+       personal_info, status, message_id, error_message, sent_at)
+      VALUES (${sendData.campaign_id}, ${sendData.recipient_email}, 
+              ${sendData.recipient_name || ''}, ${sendData.subject || ''}, 
+              ${sendData.email_body || ''}, ${sendData.personal_info || '{}'},
+              ${sendData.status}, ${sendData.message_id || ''}, 
+              ${sendData.error_message || ''}, 
+              ${sendData.status === 'sent' ? new Date().toISOString() : null})
+      RETURNING id
+    `;
+    return result[0].id;
+  },
+
+  // Get campaign details with send statistics
+  getCampaignDetails: async (campaignId) => {
+    const campaign = await sql`
+      SELECT * FROM bulk_email_campaigns WHERE id = ${campaignId}
+    `;
+    
+    if (campaign.length === 0) return null;
+
+    const sends = await sql`
+      SELECT * FROM bulk_email_sends 
+      WHERE campaign_id = ${campaignId}
+      ORDER BY created_at DESC
+    `;
+
+    const stats = await sql`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM bulk_email_sends 
+      WHERE campaign_id = ${campaignId}
+      GROUP BY status
+    `;
+
+    return {
+      ...campaign[0],
+      agent_config: JSON.parse(campaign[0].agent_config || '{}'),
+      sends: sends.map(send => ({
+        ...send,
+        personal_info: JSON.parse(send.personal_info || '{}')
+      })),
+      stats: stats.reduce((acc, stat) => {
+        acc[stat.status] = parseInt(stat.count);
+        return acc;
+      }, {})
+    };
+  },
+
+  // Delete campaign and all related sends
+  deleteCampaign: async (campaignId, userId) => {
+    // Verify ownership
+    const campaign = await sql`
+      SELECT id FROM bulk_email_campaigns 
+      WHERE id = ${campaignId} AND user_id = ${userId}
+    `;
+    
+    if (campaign.length === 0) {
+      throw new Error('Campaign not found or access denied');
+    }
+
+    // Delete sends first (due to foreign key)
+    await sql`DELETE FROM bulk_email_sends WHERE campaign_id = ${campaignId}`;
+    
+    // Delete campaign
+    const result = await sql`DELETE FROM bulk_email_campaigns WHERE id = ${campaignId}`;
+    return result;
+  }
+};
+// CSV Upload operations
+export const csvUploadDb = {
+  // Log CSV upload
+  create: async (uploadData) => {
+    const result = await sql`
+      INSERT INTO csv_uploads 
+      (user_id, filename, original_filename, file_size, total_rows, headers, status)
+      VALUES (${uploadData.user_id}, ${uploadData.filename}, ${uploadData.original_filename},
+              ${uploadData.file_size}, ${uploadData.total_rows}, 
+              ${JSON.stringify(uploadData.headers)}, ${uploadData.status || 'processed'})
+      RETURNING id
+    `;
+    return result[0].id;
+  },
+
+  // Get uploads by user
+  getByUser: async (userId, limit = 20) => {
+    const result = await sql`
+      SELECT * FROM csv_uploads 
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC 
+      LIMIT ${limit}
+    `;
+    
+    return result.map(upload => ({
+      ...upload,
+      headers: JSON.parse(upload.headers || '[]')
+    }));
+  }
+};
+
+// Email Template operations
+export const emailTemplateDb = {
+  // Create template
+  create: async (templateData) => {
+    const result = await sql`
+      INSERT INTO email_templates 
+      (user_id, name, description, subject_template, body_template, variables, category)
+      VALUES (${templateData.user_id}, ${templateData.name}, ${templateData.description},
+              ${templateData.subject_template}, ${templateData.body_template},
+              ${JSON.stringify(templateData.variables || [])}, ${templateData.category || 'general'})
+      RETURNING id
+    `;
+    return result[0].id;
+  },
+
+  // Get templates by user
+  getByUser: async (userId, category = null) => {
+    let query;
+    if (category) {
+      query = sql`
+        SELECT * FROM email_templates 
+        WHERE user_id = ${userId} AND category = ${category}
+        ORDER BY created_at DESC
+      `;
+    } else {
+      query = sql`
+        SELECT * FROM email_templates 
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+      `;
+    }
+    
+    const result = await query;
+    return result.map(template => ({
+      ...template,
+      variables: JSON.parse(template.variables || '[]')
+    }));
+  },
+
+  // Get public templates
+  getPublic: async (category = null, limit = 50) => {
+    let query;
+    if (category) {
+      query = sql`
+        SELECT * FROM email_templates 
+        WHERE is_public = TRUE AND category = ${category}
+        ORDER BY usage_count DESC, created_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      query = sql`
+        SELECT * FROM email_templates 
+        WHERE is_public = TRUE
+        ORDER BY usage_count DESC, created_at DESC
+        LIMIT ${limit}
+      `;
+    }
+    
+    const result = await query;
+    return result.map(template => ({
+      ...template,
+      variables: JSON.parse(template.variables || '[]')
+    }));
+  },
+
+  // Increment usage count
+  incrementUsage: async (templateId) => {
+    await sql`
+      UPDATE email_templates 
+      SET usage_count = usage_count + 1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${templateId}
+    `;
+  }
+};
+
 // Export the schema initializer for manual use
-export { initializeSchema };
+export { initializeSchema, initializeBulkEmailSchema };
