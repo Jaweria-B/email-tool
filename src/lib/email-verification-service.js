@@ -6,11 +6,17 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT || 587,
-    secure: false, // true for 465, false for other ports
+    secure: process.env.SMTP_SECURE || false, // true for 465 (SSL), false for other ports
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass: '_VNkv*B$tW#qLC9',
     },
+    // Additional options for better compatibility
+    tls: {
+      // Do not fail on invalid certs
+      rejectUnauthorized: false
+    },
+    from: `"EmailCraft" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
   });
 };
 

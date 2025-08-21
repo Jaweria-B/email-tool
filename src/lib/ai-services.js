@@ -27,7 +27,7 @@ export class EmailGenerationService {
         throw new Error(`Unsupported AI provider: ${this.provider}`);
     }
 
-    // Parse JSON response
+    // Enhanced JSON parsing for incomplete responses
     try {
       const jsonResponse = JSON.parse(response);
       if (!jsonResponse.subject || !jsonResponse.body) {
@@ -35,6 +35,34 @@ export class EmailGenerationService {
       }
       return jsonResponse;
     } catch (parseError) {
+      console.log('Initial JSON parse failed:', parseError.message);
+      console.log('Raw response:', response);
+      
+      // Try to fix incomplete JSON
+      let fixedResponse = response.trim();
+      
+      // Handle case where JSON is cut off in the middle of body field
+      if (fixedResponse.includes('"body": "') && !fixedResponse.endsWith('"}')) {
+        // Find the last complete part and close the JSON
+        const bodyStart = fixedResponse.indexOf('"body": "') + 9;
+        const currentBody = fixedResponse.substring(bodyStart);
+        
+        // Remove any trailing incomplete characters
+        const cleanBody = currentBody.replace(/[^a-zA-Z0-9\s.,!?;:'"()-]*$/, '');
+        
+        fixedResponse = fixedResponse.substring(0, bodyStart) + cleanBody + '"}';
+      }
+      
+      // Try parsing the fixed response
+      try {
+        const jsonResponse = JSON.parse(fixedResponse);
+        if (jsonResponse.subject && jsonResponse.body) {
+          return jsonResponse;
+        }
+      } catch (fixError) {
+        console.log('Fixed JSON parse also failed:', fixError.message);
+      }
+      
       // Fallback: try to extract JSON from response if it's wrapped in other text
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -44,18 +72,17 @@ export class EmailGenerationService {
             return jsonResponse;
           }
         } catch (e) {
-          // Continue to error below
+          console.log('JSON match parse failed:', e.message);
         }
       }
       
-      // If JSON parsing fails, return a structured object anyway
+      // Final fallback: return a structured object with whatever we got
       return {
-        subject: 'Email Subject',
-        body: response
+        subject: 'Email Subject (Generated with Issues)',
+        body: response || 'Email generation encountered an issue. Please try again.'
       };
     }
   }
-
   async generateWithQwen(prompt) {
     const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.QWEN], {
       method: 'POST',
@@ -134,13 +161,17 @@ export class EmailGenerationService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
           },
           {
             role: 'user',
             content: prompt
           }
-        ]
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        top_p: 0.9,
+        stream: false
       })
     });
 
@@ -150,7 +181,34 @@ export class EmailGenerationService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+    
+    console.log('DeepSeek raw content:', content);
+    
+    // Clean up the response - remove markdown formatting and fix malformed JSON
+    content = content.trim();
+    
+    // Remove markdown code blocks if present
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    content = content.replace(/}\s*"\s*}\s*}\s*$/, '}');
+    content = content.replace(/}\s*}\s*$/, '}');
+    
+    // Ensure proper JSON structure
+    if (!content.startsWith('{')) {
+      content = '{' + content;
+    }
+    if (!content.endsWith('}')) {
+      content = content + '}';
+    }
+    
+    console.log('DeepSeek cleaned content:', content);
+    
+    return content;
   }
 
   async generateWithGemini(prompt) {

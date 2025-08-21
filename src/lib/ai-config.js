@@ -7,8 +7,8 @@ export const AI_PROVIDERS = {
 };
 
 export const AI_MODELS = {
-  [AI_PROVIDERS.QWEN]: 'Qwen/Qwen3-235B-A22B-fp8-tput',
-  [AI_PROVIDERS.OPENAI]: 'openai/gpt-5-2025-08-07',
+  [AI_PROVIDERS.QWEN]: 'alibaba/qwen-turbo',
+  [AI_PROVIDERS.OPENAI]: 'openai/gpt-5-chat-latest',
   [AI_PROVIDERS.DEEPSEEK]: 'deepseek/deepseek-r1',
   [AI_PROVIDERS.GEMINI]: 'google/gemini-2.0-flash'
 };
