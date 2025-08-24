@@ -16,7 +16,14 @@ import {
   Mail,
   User,
   Building,
-  LogOut
+  LogOut,
+  RefreshCw,
+  Eye,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  X,
+  UserCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -37,38 +44,86 @@ const BulkEmailAgent = () => {
     },
     fromName: ''
   });
+
+  // Sender Information State
+  const [senderInfo, setSenderInfo] = useState({
+    name: '',
+    title: '',
+    company: '',
+    industry: '',
+    bio: '',
+    expertise: '',
+    achievements: ''
+  });
   
   // Agent Configuration State
   const [agentConfig, setAgentConfig] = useState({
-    name: 'Email Outreach Agent',
-    systemPrompt: `You are an expert email outreach specialist. Your goal is to create personalized, engaging emails that feel authentic and human. 
+    name: 'Academic Outreach Specialist',
+    systemPrompt:`You are an AI-powered Academic Outreach Specialist with deep expertise in crafting personalized academic communications. You leverage advanced reasoning to understand complex academic hierarchies, research interests, and institutional cultures.
+
+Your core capabilities:
+- RESEARCH ANALYSIS: Analyze recipient's publications, research interests, and academic background
+- INSTITUTIONAL INTELLIGENCE: Understand university cultures, department dynamics, and funding landscapes  
+- PERSONALIZATION ENGINE: Create highly targeted content based on academic fit and shared interests
+- PROFESSIONAL TONE MASTERY: Adapt communication style from formal to collaborative based on context
 
 Key Instructions:
-- Use the provided person's information to create relevant, personalized content
-- Maintain a professional yet approachable tone
-- Keep emails concise but compelling
-- Include a clear call-to-action
-- Avoid generic or spammy language`,
+- Demonstrate genuine understanding of recipient's research through specific references
+- Establish academic credibility by highlighting relevant sender qualifications/interests
+- Show clear value proposition (research collaboration, skill alignment, mutual benefit)
+- Use appropriate academic discourse while remaining approachable
+- Include strategic follow-up suggestions based on academic timelines
+- Never use generic templates or obvious AI-generated language
+
+`,
     
     emailTemplate: `Write a personalized email using the following information:
 
-Person's Details: {person_info}
-Company: {company}
-Role: {role}
-Industry: {industry}
-Additional Info: {additional_info}
+RECIPIENT DETAILS:
+{recipient_info}
+
+SENDER DETAILS:
+{sender_info}
 
 Email Purpose: {email_purpose}
 Call-to-Action: {call_to_action}
 
-Create an email that:
-1. Addresses them personally
-2. Shows you've researched their background
-3. Provides clear value proposition
-4. Includes the specified call-to-action
-5. Maintains professional tone
+CRITICAL: If any information is not provided or empty, DO NOT use placeholder text like "[Your Name]", "[Company]", etc. Instead:
+- Write the email in a general manner without mentioning missing information
+- Focus on the information that IS available
+- Make the email flow naturally without obvious gaps
+- If sender name is missing, avoid using "I" statements that require a name
+- If company is missing, don't mention company-specific details
+- Adapt the tone and content based on available information only
 
-Generate both subject line and email body.`,
+Create an email that:
+1. Addresses the recipient personally (if name is available)
+2. Shows you've researched their background (using available recipient info)
+3. Establishes sender credibility naturally (using available sender info)
+4. Provides clear value proposition
+5. Includes the specified call-to-action
+6. Maintains professional tone
+7. NEVER uses placeholder text or brackets for missing information
+8. Flows naturally regardless of what information is missing
+
+ADVANCED REASONING REQUIREMENTS:
+1. Analyze the academic fit between sender and recipient
+2. Identify specific research connections or collaboration opportunities
+3. Determine appropriate level of formality based on academic hierarchy
+4. Craft compelling narrative showing genuine research interest
+5. Include strategic timing considerations for academic cycles
+
+Generate a sophisticated academic email that:
+- Opens with specific reference to recipient's recent work or interests
+- Establishes sender's credibility and relevant background naturally
+- Demonstrates clear research into recipient's academic profile
+- Presents compelling value proposition for collaboration/connection
+- Uses appropriate academic tone and terminology
+- Includes respectful but clear call-to-action with next steps
+- Shows understanding of academic timelines and constraints
+- Never appears generic or AI-generated
+
+Generate both subject line and email body. Make sure both are complete and professional without any placeholder text.`,
     
     emailPurpose: 'Professional outreach for partnership opportunities',
     callToAction: 'Schedule a brief 15-minute call to discuss potential collaboration',
@@ -78,12 +133,13 @@ Generate both subject line and email body.`,
 
   // Email Campaign State
   const [campaignState, setCampaignState] = useState({
-    status: 'idle', // idle, processing, paused, completed
+    status: 'idle', // idle, processing, paused, completed, sending, sent
     processed: 0,
     total: 0,
     successful: 0,
     failed: 0,
-    currentBatch: []
+    currentBatch: [],
+    sendResults: []
   });
 
   // Field Mapping State
@@ -98,7 +154,7 @@ Generate both subject line and email body.`,
 
   // Generated emails storage
   const [generatedEmails, setGeneratedEmails] = useState([]);
-  const [currentStep, setCurrentStep] = useState(1); // 1: Upload, 2: Configure, 3: Preview, 4: Send
+  const [currentStep, setCurrentStep] = useState(1); // 1: Upload, 2: Configure, 3: Preview, 4: Send, 5: Results
 
   // Load user data
   const loadUserData = async () => {
@@ -148,7 +204,17 @@ Generate both subject line and email body.`,
         const data = await response.json();
         setCsvData(data.rows);
         setCsvHeaders(data.headers);
-        setCurrentStep(2);
+        // Reset generated emails when new CSV is uploaded
+        setGeneratedEmails([]);
+        setCampaignState({
+          status: 'idle',
+          processed: 0,
+          total: 0,
+          successful: 0,
+          failed: 0,
+          currentBatch: [],
+          sendResults: []
+        });
       } else {
         alert('Failed to parse CSV file');
       }
@@ -160,17 +226,21 @@ Generate both subject line and email body.`,
 
   // Generate single email
   const generateEmailForPerson = async (person) => {
-    const personInfo = Object.entries(person)
+    // Format recipient information
+    const recipientInfo = Object.entries(person)
       .filter(([key, value]) => value && value.trim())
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
+    // Format sender information
+    const senderInfoFormatted = Object.entries(senderInfo)
+      .filter(([key, value]) => value && value.trim())
+      .map(([key, value]) => `${key.replace('_', ' ')}: ${value}`)
+      .join('\n');
+
     const prompt = agentConfig.emailTemplate
-      .replace('{person_info}', personInfo)
-      .replace('{company}', person[fieldMapping.company] || 'their company')
-      .replace('{role}', person[fieldMapping.role] || 'their role')
-      .replace('{industry}', person[fieldMapping.industry] || 'their industry')
-      .replace('{additional_info}', person[fieldMapping.additional_info] || '')
+      .replace('{recipient_info}', recipientInfo || 'No specific recipient information provided')
+      .replace('{sender_info}', senderInfoFormatted || 'No specific sender information provided')
       .replace('{email_purpose}', agentConfig.emailPurpose)
       .replace('{call_to_action}', agentConfig.callToAction);
 
@@ -210,14 +280,19 @@ Generate both subject line and email body.`,
   };
 
   // Start bulk email generation
-  const startBulkGeneration = async () => {
+  const startBulkGeneration = async (regenerate = false) => {
+    if (regenerate) {
+      setGeneratedEmails([]);
+    }
+
     setCampaignState({
       status: 'processing',
       processed: 0,
       total: csvData.length,
       successful: 0,
       failed: 0,
-      currentBatch: []
+      currentBatch: [],
+      sendResults: []
     });
 
     const batchSize = 5; // Process 5 emails at a time
@@ -247,117 +322,125 @@ Generate both subject line and email body.`,
 
     setGeneratedEmails(results);
     setCampaignState(prev => ({ ...prev, status: 'completed' }));
-    setCurrentStep(4);
   };
 
   // Send emails
-const sendBulkEmails = async () => {
-  const successfulEmails = generatedEmails.filter(email => email.status === 'generated');
-  
-  if (successfulEmails.length === 0) {
-    alert('No emails to send');
-    return;
-  }
-
-  // Validate SMTP configuration
-  if (!smtpConfig.auth.user || !smtpConfig.auth.pass) {
-    alert('Please configure your SMTP settings first');
-    return;
-  }
-
-  // Show loading state
-  setCampaignState(prev => ({ 
-    ...prev, 
-    status: 'sending',
-    processed: 0,
-    successful: 0,
-    failed: 0
-  }));
-
-  try {
-    const results = [];
+  const sendBulkEmails = async () => {
+    const successfulEmails = generatedEmails.filter(email => email.status === 'generated');
     
-    for (let i = 0; i < successfulEmails.length; i++) {
-      const emailItem = successfulEmails[i];
-      
-      try {
-        const response = await fetch('/api/send-emails', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            emails: [emailItem.person[fieldMapping.email]], // Send one at a time for personalization
-            subject: emailItem.subject,
-            body: emailItem.email,
-            smtpConfig: smtpConfig
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          results.push(...result.results);
-          console.log(`Email ${i + 1}/${successfulEmails.length} sent successfully`);
-          
-          // Update progress
-          setCampaignState(prev => ({ 
-            ...prev, 
-            processed: i + 1,
-            successful: prev.successful + 1
-          }));
-        } else {
-          const errorData = await response.json();
-          console.error(`Failed to send email ${i + 1}:`, errorData.message);
-          results.push({
-            email: emailItem.person[fieldMapping.email],
-            success: false,
-            error: errorData.message
-          });
-          
-          // Update progress
-          setCampaignState(prev => ({ 
-            ...prev, 
-            processed: i + 1,
-            failed: prev.failed + 1
-          }));
-        }
-      } catch (error) {
-        console.error(`Error sending email ${i + 1}:`, error);
-        results.push({
-          email: emailItem.person[fieldMapping.email],
-          success: false,
-          error: error.message
-        });
-        
-        // Update progress
-        setCampaignState(prev => ({ 
-          ...prev, 
-          processed: i + 1,
-          failed: prev.failed + 1
-        }));
-      }
-
-      // Add delay between sends to avoid rate limits
-      if (i < successfulEmails.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1200)); // 1.2 second delay
-      }
+    if (successfulEmails.length === 0) {
+      alert('No emails to send');
+      return;
     }
 
-    // Final update
+    // Validate SMTP configuration
+    if (!smtpConfig.auth.user || !smtpConfig.auth.pass) {
+      alert('Please configure your SMTP settings first');
+      return;
+    }
+
+    // Show loading state and move to results step
     setCampaignState(prev => ({ 
       ...prev, 
-      status: 'completed'
+      status: 'sending',
+      processed: 0,
+      successful: 0,
+      failed: 0,
+      sendResults: []
     }));
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    
-    alert(`Bulk email campaign completed!\n✅ Sent: ${successful}\n❌ Failed: ${failed}`);
-    
-  } catch (error) {
-    console.error('Bulk send error:', error);
-    setCampaignState(prev => ({ ...prev, status: 'failed' }));
-    alert('Error sending bulk emails: ' + error.message);
-  }
-};
+    setCurrentStep(5); // Move to results page
+
+    try {
+      const results = [];
+      
+      for (let i = 0; i < successfulEmails.length; i++) {
+        const emailItem = successfulEmails[i];
+        
+        try {
+          const response = await fetch('/api/send-emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              emails: [emailItem.person[fieldMapping.email]], // Send one at a time for personalization
+              subject: emailItem.subject,
+              body: emailItem.email,
+              smtpConfig: smtpConfig
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            const sendResult = {
+              email: emailItem.person[fieldMapping.email],
+              name: emailItem.person[fieldMapping.name] || 'Unknown',
+              success: true,
+              timestamp: new Date().toISOString()
+            };
+            results.push(sendResult);
+            
+            // Update progress and results
+            setCampaignState(prev => ({ 
+              ...prev, 
+              processed: i + 1,
+              successful: prev.successful + 1,
+              sendResults: [...prev.sendResults, sendResult]
+            }));
+          } else {
+            const errorData = await response.json();
+            const sendResult = {
+              email: emailItem.person[fieldMapping.email],
+              name: emailItem.person[fieldMapping.name] || 'Unknown',
+              success: false,
+              error: errorData.message,
+              timestamp: new Date().toISOString()
+            };
+            results.push(sendResult);
+            
+            // Update progress and results
+            setCampaignState(prev => ({ 
+              ...prev, 
+              processed: i + 1,
+              failed: prev.failed + 1,
+              sendResults: [...prev.sendResults, sendResult]
+            }));
+          }
+        } catch (error) {
+          const sendResult = {
+            email: emailItem.person[fieldMapping.email],
+            name: emailItem.person[fieldMapping.name] || 'Unknown',
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString()
+          };
+          results.push(sendResult);
+          
+          // Update progress and results
+          setCampaignState(prev => ({ 
+            ...prev, 
+            processed: i + 1,
+            failed: prev.failed + 1,
+            sendResults: [...prev.sendResults, sendResult]
+          }));
+        }
+
+        // Add delay between sends to avoid rate limits
+        if (i < successfulEmails.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1200)); // 1.2 second delay
+        }
+      }
+
+      // Final update
+      setCampaignState(prev => ({ 
+        ...prev, 
+        status: 'sent'
+      }));
+      
+    } catch (error) {
+      console.error('Bulk send error:', error);
+      setCampaignState(prev => ({ ...prev, status: 'failed' }));
+    }
+  };
   
   // Render different steps
   const renderStep = () => {
@@ -370,6 +453,8 @@ const sendBulkEmails = async () => {
         return renderPreviewStep();
       case 4:
         return renderSendStep();
+      case 5:
+        return renderResultsStep();
       default:
         return renderUploadStep();
     }
@@ -405,9 +490,20 @@ const sendBulkEmails = async () => {
             <p className="text-white font-semibold mb-2">
               ✅ {csvData.length} contacts loaded
             </p>
-            <p className="text-purple-200 text-sm">
+            <p className="text-purple-200 text-sm mb-4">
               Headers: {csvHeaders.join(', ')}
             </p>
+            
+            {/* Next Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setCurrentStep(2)}
+                className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2"
+              >
+                Next: Configure Agent
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -416,11 +512,118 @@ const sendBulkEmails = async () => {
 
   const renderConfigureStep = () => (
     <div className="space-y-6">
-      {/* Field Mapping - Keep your existing code */}
+      {/* Sender Information */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <UserCircle className="h-6 w-6" />
+          Sender Information
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Your Name
+            </label>
+            <input
+              type="text"
+              value={senderInfo.name}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="John Smith"
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Job Title
+            </label>
+            <input
+              type="text"
+              value={senderInfo.title}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="CEO, Marketing Director, etc."
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Company Name
+            </label>
+            <input
+              type="text"
+              value={senderInfo.company}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, company: e.target.value }))}
+              placeholder="Your Company Ltd."
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Industry
+            </label>
+            <input
+              type="text"
+              value={senderInfo.industry}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, industry: e.target.value }))}
+              placeholder="Technology, Finance, Healthcare, etc."
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Brief Bio/Description
+            </label>
+            <textarea
+              value={senderInfo.bio}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, bio: e.target.value }))}
+              placeholder="Brief description about yourself or your role..."
+              rows={3}
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Key Expertise/Skills
+            </label>
+            <input
+              type="text"
+              value={senderInfo.expertise}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, expertise: e.target.value }))}
+              placeholder="AI, Digital Marketing, Product Development, etc."
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-100 text-sm font-medium mb-2">
+              Key Achievements (Optional)
+            </label>
+            <input
+              type="text"
+              value={senderInfo.achievements}
+              onChange={(e) => setSenderInfo(prev => ({ ...prev, achievements: e.target.value }))}
+              placeholder="Awards, certifications, notable projects, etc."
+              className="w-full bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
+          <p className="text-blue-200 text-sm">
+            💡 <strong>Note:</strong> All fields are optional. The AI will only use the information you provide and won't include placeholder text for empty fields.
+          </p>
+        </div>
+      </div>
+
+      {/* Field Mapping */}
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
           <Settings className="h-6 w-6" />
-          Map CSV Fields
+          Map CSV Fields (Recipient Info)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -535,7 +738,7 @@ const sendBulkEmails = async () => {
         </div>
       </div>
 
-      {/* Agent Configuration - Keep your existing code */}
+      {/* Agent Configuration */}
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
           <Bot className="h-6 w-6" />
@@ -595,21 +798,24 @@ const sendBulkEmails = async () => {
         <div className="flex gap-4 mt-8">
           <button
             onClick={() => setCurrentStep(1)}
-            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300"
+            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300 flex items-center gap-2"
           >
+            <ArrowLeft className="h-5 w-5" />
             Back
           </button>
           <button
             onClick={() => setCurrentStep(3)}
             disabled={!fieldMapping.email || !smtpConfig.auth.user || !smtpConfig.auth.pass}
-            className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             Preview & Generate
+            <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>
     </div>
   );
+
   const renderPreviewStep = () => (
     <div className="space-y-6">
       {/* Campaign Overview */}
@@ -618,6 +824,58 @@ const sendBulkEmails = async () => {
           <Users className="h-6 w-6" />
           Campaign Preview
         </h2>
+        
+        {/* Sender & Recipient Info Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white/10 rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <UserCircle className="h-5 w-5" />
+              Sender Information
+            </h3>
+            <div className="space-y-2 text-sm">
+              {senderInfo.name && (
+                <div className="text-purple-200">
+                  <span className="font-medium">Name:</span> <span className="text-white">{senderInfo.name}</span>
+                </div>
+              )}
+              {senderInfo.title && (
+                <div className="text-purple-200">
+                  <span className="font-medium">Title:</span> <span className="text-white">{senderInfo.title}</span>
+                </div>
+              )}
+              {senderInfo.company && (
+                <div className="text-purple-200">
+                  <span className="font-medium">Company:</span> <span className="text-white">{senderInfo.company}</span>
+                </div>
+              )}
+              {senderInfo.industry && (
+                <div className="text-purple-200">
+                  <span className="font-medium">Industry:</span> <span className="text-white">{senderInfo.industry}</span>
+                </div>
+              )}
+              {!senderInfo.name && !senderInfo.title && !senderInfo.company && (
+                <div className="text-purple-300 italic">No sender information provided</div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white/10 rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Recipient Data Fields
+            </h3>
+            <div className="space-y-2 text-sm">
+              {Object.entries(fieldMapping).map(([field, csvField]) => (
+                csvField && (
+                  <div key={field} className="text-purple-200">
+                    <span className="font-medium">{field.replace('_', ' ').toUpperCase()}:</span> 
+                    <span className="text-white ml-2">{csvField}</span>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white/10 rounded-xl p-4 text-center">
@@ -650,18 +908,75 @@ const sendBulkEmails = async () => {
           </div>
         )}
 
+        {/* Generated Emails Preview */}
+        {generatedEmails.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Generated Emails Preview
+            </h3>
+            <div className="bg-white/10 rounded-xl p-4 max-h-300 overflow-y-auto">
+              <div className="space-y-4">
+                {generatedEmails.map((emailItem, index) => (
+                  <div key={index} className="border border-white/20 rounded-lg p-4 bg-white/5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-200 text-sm">
+                          To: {emailItem.person[fieldMapping.email]}
+                        </span>
+                        {emailItem.person[fieldMapping.name] && (
+                          <span className="text-white font-medium">
+                            ({emailItem.person[fieldMapping.name]})
+                          </span>
+                        )}
+                      </div>
+                      {emailItem.status === 'generated' ? (
+                        <Check className="h-5 w-5 text-green-400" />
+                      ) : (
+                        <X className="h-5 w-5 text-red-400" />
+                      )}
+                    </div>
+                    
+                    {emailItem.status === 'generated' ? (
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-purple-200 text-sm font-medium">Subject: </span>
+                          <span className="text-white text-sm">{emailItem.subject}</span>
+                        </div>
+                        <div>
+                          <span className="text-purple-200 text-sm font-medium">Email Body:</span>
+                          <div className="bg-white/10 rounded-lg p-3 mt-2 max-h-48 overflow-y-auto">
+                            <p className="text-white text-sm whitespace-pre-wrap">
+                              {emailItem.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-red-300 text-sm">
+                        Failed to generate: {emailItem.error}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2 ">
           <button
             onClick={() => setCurrentStep(2)}
-            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300"
+            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300 flex items-center gap-2"
           >
+            <ArrowLeft className="h-5 w-5" />
             Back to Configure
           </button>
           
           {campaignState.status === 'idle' && (
             <button
-              onClick={startBulkGeneration}
+              onClick={() => startBulkGeneration(false)}
               disabled={!user}
               className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -670,14 +985,23 @@ const sendBulkEmails = async () => {
             </button>
           )}
 
-          {campaignState.status === 'completed' && (
-            <button
-              onClick={() => setCurrentStep(4)}
-              className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Send className="h-5 w-5" />
-              Review & Send
-            </button>
+          {campaignState.status === 'completed' && generatedEmails.length > 0 && (
+            <div className="flex gap-4 flex-1">
+              <button
+                onClick={() => startBulkGeneration(true)}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2"
+              >
+                <RefreshCw className="h-5 w-5" />
+                Regenerate All
+              </button>
+              <button
+                onClick={() => setCurrentStep(4)}
+                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Send className="h-5 w-5" />
+                Review & Send
+              </button>
+            </div>
           )}
         </div>
 
@@ -697,8 +1021,8 @@ const sendBulkEmails = async () => {
       {/* Results Overview */}
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <BarChart3 className="h-6 w-6" />
-          Campaign Results
+          <Send className="h-6 w-6" />
+          Ready to Send
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -710,13 +1034,13 @@ const sendBulkEmails = async () => {
             <div className="text-2xl font-bold text-green-300 mb-1">
               {generatedEmails.filter(e => e.status === 'generated').length}
             </div>
-            <div className="text-purple-200 text-sm">Successfully Generated</div>
+            <div className="text-purple-200 text-sm">Ready to Send</div>
           </div>
           <div className="bg-red-500/20 rounded-xl p-4 text-center border border-red-500/30">
             <div className="text-2xl font-bold text-red-300 mb-1">
               {generatedEmails.filter(e => e.status === 'failed').length}
             </div>
-            <div className="text-purple-200 text-sm">Failed</div>
+            <div className="text-purple-200 text-sm">Failed Generation</div>
           </div>
           <div className="bg-purple-500/20 rounded-xl p-4 text-center border border-purple-500/30">
             <div className="text-2xl font-bold text-purple-300 mb-1">
@@ -726,35 +1050,57 @@ const sendBulkEmails = async () => {
           </div>
         </div>
 
-        {/* Email Preview */}
+        {/* Email List Preview */}
         <div className="bg-white/10 rounded-xl p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Sample Generated Email</h3>
-          {generatedEmails.filter(e => e.status === 'generated')[0] && (
-            <div className="space-y-3">
-              <div>
-                <span className="text-purple-200 text-sm">Subject: </span>
-                <span className="text-white">
-                  {generatedEmails.filter(e => e.status === 'generated')[0].subject}
-                </span>
-              </div>
-              <div>
-                <span className="text-purple-200 text-sm">Body Preview: </span>
-                <div className="bg-white/10 rounded-lg p-3 mt-2">
-                  <p className="text-white text-sm whitespace-pre-wrap">
-                    {generatedEmails.filter(e => e.status === 'generated')[0].email?.substring(0, 300)}...
-                  </p>
+          <h3 className="text-lg font-semibold text-white mb-4">Emails to be Sent</h3>
+          <div className="max-h-60 overflow-y-auto">
+            <div className="space-y-2">
+              {generatedEmails.filter(e => e.status === 'generated').map((emailItem, index) => (
+                <div key={index} className="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
+                    <div>
+                      <span className="text-white font-medium">
+                        {emailItem.person[fieldMapping.email]}
+                      </span>
+                      {emailItem.person[fieldMapping.name] && (
+                        <span className="text-purple-200 text-sm ml-2">
+                          ({emailItem.person[fieldMapping.name]})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-purple-200 text-xs">
+                    {emailItem.subject?.substring(0, 50)}...
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* SMTP Configuration Summary */}
+        <div className="bg-white/10 rounded-xl p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-3">Email Configuration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-purple-200">From: </span>
+              <span className="text-white">{smtpConfig.fromName || smtpConfig.auth.user}</span>
+            </div>
+            <div>
+              <span className="text-purple-200">SMTP: </span>
+              <span className="text-white">{smtpConfig.host}:{smtpConfig.port}</span>
+            </div>
+          </div>
         </div>
 
         {/* Send Actions */}
         <div className="flex gap-4">
           <button
             onClick={() => setCurrentStep(3)}
-            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300"
+            className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300 flex items-center gap-2"
           >
+            <ArrowLeft className="h-5 w-5" />
             Back to Preview
           </button>
           
@@ -767,6 +1113,128 @@ const sendBulkEmails = async () => {
             Send {generatedEmails.filter(e => e.status === 'generated').length} Emails
           </button>
         </div>
+      </div>
+    </div>
+  );
+
+  const renderResultsStep = () => (
+    <div className="space-y-6">
+      {/* Sending Progress */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <BarChart3 className="h-6 w-6" />
+          {campaignState.status === 'sending' ? 'Sending Emails...' : 'Campaign Results'}
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-blue-500/20 rounded-xl p-4 text-center border border-blue-500/30">
+            <div className="text-2xl font-bold text-blue-300 mb-1">{campaignState.processed}</div>
+            <div className="text-purple-200 text-sm">Processed</div>
+          </div>
+          <div className="bg-green-500/20 rounded-xl p-4 text-center border border-green-500/30">
+            <div className="text-2xl font-bold text-green-300 mb-1">{campaignState.successful}</div>
+            <div className="text-purple-200 text-sm">Sent Successfully</div>
+          </div>
+          <div className="bg-red-500/20 rounded-xl p-4 text-center border border-red-500/30">
+            <div className="text-2xl font-bold text-red-300 mb-1">{campaignState.failed}</div>
+            <div className="text-purple-200 text-sm">Failed</div>
+          </div>
+          <div className="bg-purple-500/20 rounded-xl p-4 text-center border border-purple-500/30">
+            <div className="text-2xl font-bold text-purple-300 mb-1">
+              {campaignState.processed > 0 ? Math.round((campaignState.successful / campaignState.processed) * 100) : 0}%
+            </div>
+            <div className="text-purple-200 text-sm">Success Rate</div>
+          </div>
+        </div>
+
+        {/* Progress Bar for Sending */}
+        {campaignState.status === 'sending' && (
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-purple-200 mb-2">
+              <span>Sending emails...</span>
+              <span>{campaignState.processed} / {generatedEmails.filter(e => e.status === 'generated').length}</span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${(campaignState.processed / generatedEmails.filter(e => e.status === 'generated').length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Results */}
+        {campaignState.sendResults.length > 0 && (
+          <div className="bg-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Detailed Results</h3>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="space-y-2">
+                {campaignState.sendResults.map((result, index) => (
+                  <div key={index} className={`flex items-center justify-between rounded-lg p-3 ${
+                    result.success ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      {result.success ? (
+                        <CheckCircle className="h-5 w-5 text-green-400" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-red-400" />
+                      )}
+                      <div>
+                        <span className="text-white font-medium">{result.name}</span>
+                        <span className="text-purple-200 text-sm ml-2">({result.email})</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-sm font-medium ${result.success ? 'text-green-300' : 'text-red-300'}`}>
+                        {result.success ? 'Sent' : 'Failed'}
+                      </div>
+                      {result.error && (
+                        <div className="text-xs text-red-200">{result.error}</div>
+                      )}
+                      <div className="text-xs text-purple-200">
+                        {new Date(result.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {campaignState.status === 'sent' && (
+          <div className="flex gap-4 mt-6">
+            <button
+              onClick={() => {
+                // Reset to start a new campaign
+                setCurrentStep(1);
+                setGeneratedEmails([]);
+                setCampaignState({
+                  status: 'idle',
+                  processed: 0,
+                  total: 0,
+                  successful: 0,
+                  failed: 0,
+                  currentBatch: [],
+                  sendResults: []
+                });
+              }}
+              className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <Upload className="h-5 w-5" />
+              Start New Campaign
+            </button>
+            
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all duration-300 flex items-center gap-2"
+            >
+              <Building className="h-5 w-5" />
+              Back to Dashboard
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -855,10 +1323,11 @@ const sendBulkEmails = async () => {
               { step: 1, label: 'Upload CSV', icon: Upload },
               { step: 2, label: 'Configure Agent', icon: Settings },
               { step: 3, label: 'Generate Emails', icon: Bot },
-              { step: 4, label: 'Review & Send', icon: Send }
+              { step: 4, label: 'Review & Send', icon: Send },
+              { step: 5, label: 'Results', icon: BarChart3 }
             ].map(({ step, label, icon: Icon }) => (
               <div key={step} className="flex items-center">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 ${
                   currentStep >= step 
                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
                     : 'text-purple-200'
@@ -866,7 +1335,7 @@ const sendBulkEmails = async () => {
                   <Icon className="h-4 w-4" />
                   <span className="hidden sm:inline text-sm font-medium">{label}</span>
                 </div>
-                {step < 4 && <div className="w-8 h-px bg-white/20 mx-2 hidden sm:block" />}
+                {step < 5 && <div className="w-6 h-px bg-white/20 mx-1 hidden sm:block" />}
               </div>
             ))}
           </div>
