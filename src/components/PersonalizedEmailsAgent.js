@@ -23,7 +23,8 @@ import {
   ArrowLeft,
   Check,
   X,
-  UserCircle
+  UserCircle,
+  Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -460,6 +461,73 @@ Generate both subject line and email body. Make sure both are complete and profe
     }
   };
 
+  // Add this function before your renderUploadStep function
+  const downloadDummyData = () => {
+    const dummyData = [
+      {
+        email: 'hi.jaweria@gmail.com',
+        name: 'Dr. Jaweria Hassan',
+        company: 'University of Punjab',
+        role: 'Associate Professor of Computer Science',
+        industry: 'Higher Education',
+        additional_info: 'Specializes in artificial intelligence and machine learning applications in healthcare. Published 45+ peer-reviewed papers. Currently leading a $2.3M NSF grant on AI-driven diagnostic systems. PhD from Stanford University. Member of IEEE and ACM.'
+      },
+      {
+        email: 'muhammadsaad2387@gmail.com',
+        name: 'Prof. Muhammad Saad Ahmad',
+        company: 'Lahore University of Management Sciences',
+        role: 'Professor of Data Science',
+        industry: 'Higher Education',
+        additional_info: 'Expert in big data analytics and computational statistics. Department Head with 12 years of experience. Author of \'Modern Statistical Computing\' textbook. Runs the Data Science Research Lab with 15+ graduate students. PhD from MIT, former Google Research scientist.'
+      },
+      {
+        email: 'jaweriab94@gmail.com',
+        name: 'Dr. Jaweria Batool',
+        company: 'Information Technology University',
+        role: 'Assistant Professor of Software Engineering',
+        industry: 'Higher Education',
+        additional_info: 'Focuses on software architecture and distributed systems. Rising star with 20+ publications in top-tier conferences. Recipient of IEEE Early Career Award 2023. PhD from University of Toronto. Active in open-source community with 50K+ GitHub followers.'
+      },
+      {
+        email: 'jaweriab.codes@gmail.com',
+        name: 'Prof. Jaweria Butt',
+        company: 'COMSATS University Islamabad',
+        role: 'Professor of Cybersecurity',
+        industry: 'Higher Education',
+        additional_info: 'Leading researcher in network security and cryptography. 15+ years in academia and industry. Former security consultant for major banks. Director of Cybersecurity Research Center. PhD from Carnegie Mellon. Holds 8 patents in encryption technologies.'
+      }
+    ];
+
+    // Convert to CSV format
+    const headers = Object.keys(dummyData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...dummyData.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Escape quotes and wrap in quotes if contains comma or quote
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'dummy_contacts.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Modified renderUploadStep function
   const renderUploadStep = () => (
     <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 shadow-2xl">
       <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -483,6 +551,17 @@ Generate both subject line and email body. Make sure both are complete and profe
               Include columns for email, name, company, role, and any additional info
             </p>
           </label>
+        </div>
+
+        {/* Download Dummy Data Button */}
+        <div className="flex justify-center">
+          <button
+            onClick={downloadDummyData}
+            className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-xl border border-white/20 hover:border-white/30 transition-all duration-300 flex items-center gap-2"
+          >
+            <Download className="h-5 w-5" />
+            Download Sample CSV
+          </button>
         </div>
 
         {csvData.length > 0 && (

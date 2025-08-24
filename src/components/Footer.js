@@ -73,7 +73,7 @@ const Footer = () => {
   const stats = [
     { label: 'AI Models Deployed', value: '50+', icon: Cpu },
     { label: 'Happy Clients', value: '200+', icon: Star },
-    { label: 'Automations Created', value: '1000+', icon: Workflow },
+    { label: 'Automations Created', value: '50+', icon: Workflow },
     { label: 'Hours Saved Daily', value: '10K+', icon: Rocket },
   ];
 

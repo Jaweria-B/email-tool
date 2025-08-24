@@ -11,8 +11,8 @@ const AI_PROVIDER_DETAILS = {
     strengths: 'Fast processing, reliable performance, multilingual support',
     freeInfo: '60 requests per minute, 1500 requests per day',
     pricing: 'FREE',
-    buttonText: 'Get Free API Key',
-    website: 'https://aistudio.google.com/app/apikey',
+    buttonText: 'Visit AIML Platform',
+    website: 'https://aimlapi.com',
     icon: Star,
     color: 'from-green-500 to-emerald-500',
     bgColor: 'bg-green-500/20',
@@ -34,30 +34,30 @@ const AI_PROVIDER_DETAILS = {
     borderColor: 'border-purple-400'
   },
   openai: {
-    name: 'OpenAI GPT-4o Mini',
+    name: 'OpenAI GPT-5',
     label: 'CREATIVE',
     subtitle: 'Creative Writing & Versatile Content',
     bestFor: 'Creative writing, casual communications, versatile content',
     strengths: 'Natural language processing, creative flexibility',
     freeInfo: null,
     pricing: '~$0.00015 per 1K input tokens',
-    buttonText: 'Visit OpenAI Platform',
-    website: 'https://platform.openai.com',
+    buttonText: 'Visit AIML Platform',
+    website: 'https://aimlapi.com',
     icon: Zap,
     color: 'from-pink-500 to-rose-500',
     bgColor: 'bg-pink-500/20',
     borderColor: 'border-pink-400'
   },
   deepseek: {
-    name: 'DeepSeek',
+    name: 'DeepSeek R1',
     label: 'TECHNICAL',
     subtitle: 'Technical Writing & Analysis',
     bestFor: 'Technical writing, analytical content, detailed responses',
     strengths: 'Deep reasoning capabilities, structured responses',
     freeInfo: null,
     pricing: 'Credit-based system',
-    buttonText: 'Visit DeepSeek Platform',
-    website: 'https://platform.deepseek.com',
+    buttonText: 'Visit AIML Platform',
+    website: 'https://aimlapi.com',
     icon: Cpu,
     color: 'from-blue-500 to-cyan-500',
     bgColor: 'bg-blue-500/20',
@@ -141,7 +141,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
               <span className="text-purple-200 font-medium">Strengths:</span>
               <p className="text-white">{currentProvider.strengths}</p>
             </div> */}
-            {currentProvider.freeInfo && (
+            {/* {currentProvider.freeInfo && (
               <div>
                 <span className="text-green-300 font-medium">Free Tier:</span>
                 <p className="text-green-100">{currentProvider.freeInfo}</p>
@@ -152,7 +152,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
               <p className={`font-semibold ${currentProvider.pricing === 'FREE' ? 'text-green-300' : 'text-white'}`}>
                 {currentProvider.pricing}
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Visit Provider Button */}
@@ -191,7 +191,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
         </div>
 
         {/* Generation Guide Link */}
-        <div className="mt-6 pt-4 border-t border-white/20">
+        {/* <div className="mt-6 pt-4 border-t border-white/20">
           <a
             href="https://uinfo.org/email-craft/emailcraft-sending-guide/"
             target="_blank"
@@ -201,7 +201,7 @@ const ApiSettings = ({ selectedProvider, apiKeys, onApiKeyChange }) => {
             <ExternalLink className="h-4 w-4" />
             Complete Email Generation Guide
           </a>
-        </div>
+        </div> */}
 
         {/* Quick Status */}
         <div className="mt-4 text-center">
