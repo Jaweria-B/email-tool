@@ -28,12 +28,10 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const BulkEmailAgent = () => {
+const BulkEmailAgent = ({ user, onLogout, isLoadingUser }) => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
   const [csvData, setCsvData] = useState([]);
   const [csvHeaders, setCsvHeaders] = useState([]);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [smtpConfig, setSmtpConfig] = useState({
     host: 'smtp.gmail.com',
@@ -157,35 +155,6 @@ Generate both subject line and email body. Make sure both are complete and profe
   const [generatedEmails, setGeneratedEmails] = useState([]);
   const [currentStep, setCurrentStep] = useState(1); // 1: Upload, 2: Configure, 3: Preview, 4: Send, 5: Results
 
-  // Load user data
-  const loadUserData = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    } finally {
-      setIsLoadingUser(false);
-    }
-  };
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      router.push('/');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
 
   // Handle CSV upload
   const handleCsvUpload = async (event) => {
@@ -1357,42 +1326,7 @@ Generate both subject line and email body. Make sure both are complete and profe
           </div>
 
           {/* User Profile */}
-          {user && (
-            <div className="relative">
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className="bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full border border-white/30 hover:bg-white/30 transition-all duration-300 flex items-center gap-2"
-              >
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">{user.name}</span>
-              </button>
-              
-              {showProfile && (
-                <div className="absolute right-0 mt-2 w-64 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-4 shadow-2xl z-50">
-                  <div className="text-white space-y-3">
-                    <div className="border-b border-white/20 pb-3">
-                      <p className="font-semibold">{user.name}</p>
-                      <p className="text-sm text-purple-200">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={() => router.push('/dashboard')}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2"
-                    >
-                      <Building className="h-4 w-4" />
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2 text-red-200"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+
         </div>
 
         {/* Step Navigation */}

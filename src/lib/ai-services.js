@@ -7,6 +7,33 @@ export class EmailGenerationService {
     this.apiKey = apiKey;
   }
 
+  // Enhanced JSON cleaning method
+  cleanJsonResponse(response) {
+    let content = response.trim();
+    
+    // Remove markdown code blocks if present
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Remove any trailing incomplete JSON structures
+    content = content.replace(/}\s*"\s*}\s*}\s*$/, '}');
+    content = content.replace(/}\s*}\s*$/, '}');
+    
+    // Ensure proper JSON structure
+    content = content.trim();
+    if (!content.startsWith('{')) {
+      content = '{' + content;
+    }
+    if (!content.endsWith('}')) {
+      content = content + '}';
+    }
+    
+    return content;
+  }
+
   async generateEmail(prompt) {
     let response;
     
@@ -27,19 +54,29 @@ export class EmailGenerationService {
         throw new Error(`Unsupported AI provider: ${this.provider}`);
     }
 
-    // Enhanced JSON parsing for incomplete responses
+    // Enhanced JSON parsing for all responses
     try {
-      const jsonResponse = JSON.parse(response);
+      // First, clean the response
+      const cleanedResponse = this.cleanJsonResponse(response);
+      console.log('Cleaned response:', cleanedResponse);
+      
+      const jsonResponse = JSON.parse(cleanedResponse);
+      
       if (!jsonResponse.subject || !jsonResponse.body) {
         throw new Error('Invalid response format: missing subject or body');
       }
+      
       return jsonResponse;
+      
     } catch (parseError) {
-      console.log('Initial JSON parse failed:', parseError.message);
+      console.log('JSON parse failed:', parseError.message);
       console.log('Raw response:', response);
       
       // Try to fix incomplete JSON
       let fixedResponse = response.trim();
+      
+      // Remove markdown formatting
+      fixedResponse = this.cleanJsonResponse(fixedResponse);
       
       // Handle case where JSON is cut off in the middle of body field
       if (fixedResponse.includes('"body": "') && !fixedResponse.endsWith('"}')) {
@@ -67,7 +104,8 @@ export class EmailGenerationService {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
-          const jsonResponse = JSON.parse(jsonMatch[0]);
+          const cleanedMatch = this.cleanJsonResponse(jsonMatch[0]);
+          const jsonResponse = JSON.parse(cleanedMatch);
           if (jsonResponse.subject && jsonResponse.body) {
             return jsonResponse;
           }
@@ -83,6 +121,7 @@ export class EmailGenerationService {
       };
     }
   }
+
   async generateWithQwen(prompt) {
     const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.QWEN], {
       method: 'POST',
@@ -95,7 +134,7 @@ export class EmailGenerationService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
           },
           {
             role: 'user', 
@@ -130,13 +169,14 @@ export class EmailGenerationService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
           },
           {
             role: 'user',
             content: prompt
           }
-        ]
+        ],
+        temperature: 0.7
       })
     });
 
@@ -181,34 +221,7 @@ export class EmailGenerationService {
     }
 
     const data = await response.json();
-    let content = data.choices[0].message.content;
-    
-    console.log('DeepSeek raw content:', content);
-    
-    // Clean up the response - remove markdown formatting and fix malformed JSON
-    content = content.trim();
-    
-    // Remove markdown code blocks if present
-    if (content.startsWith('```json')) {
-      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (content.startsWith('```')) {
-      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    content = content.replace(/}\s*"\s*}\s*}\s*$/, '}');
-    content = content.replace(/}\s*}\s*$/, '}');
-    
-    // Ensure proper JSON structure
-    if (!content.startsWith('{')) {
-      content = '{' + content;
-    }
-    if (!content.endsWith('}')) {
-      content = content + '}';
-    }
-    
-    console.log('DeepSeek cleaned content:', content);
-    
-    return content;
+    return data.choices[0].message.content;
   }
 
   async generateWithGemini(prompt) {
@@ -223,7 +236,7 @@ export class EmailGenerationService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements.'
+            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
           },
           {
             role: 'user',
@@ -272,5 +285,5 @@ Return ONLY a valid JSON object in this exact format:
   "body": "Your email body content here"
 }
 
-Do not include any additional text, explanations, or formatting outside of the JSON object.`;
+Do not include any additional text, explanations, or formatting outside of the JSON object. Do not wrap the JSON in markdown code blocks.`;
 };

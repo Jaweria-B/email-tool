@@ -1,8 +1,17 @@
-// app/bulk-email/page.js
 "use client"
 import React from 'react';
-import BulkEmailAgent from '@/components/PersonalizedEmailsAgent';
+import PageWrapper from '@/components/PageWrapper';
+import { useAuthContext } from '@/providers/AuthProvider';
+import BulkEmailAgent from '@/components/personalized-email-sender/PersonalizedEmailsAgent';
 
-export default function BulkEmailPage() {
-  return <BulkEmailAgent />;
-}
+const PersonalizedEmails = () => {
+  const { user, isLoadingUser, handleLogout } = useAuthContext();
+
+  return (
+    <PageWrapper showFooter={true} className="container mx-auto px-4 py-8">
+      <BulkEmailAgent user={user} isLoadingUser={isLoadingUser} onLogout={handleLogout} />
+    </PageWrapper>
+  );
+};
+
+export default PersonalizedEmails;
