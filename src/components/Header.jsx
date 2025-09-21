@@ -73,7 +73,7 @@ const Header = ({ user, onLogout, isLoadingUser }) => {
             </div>
         </div>
         <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-            Email<span className="bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">Craft</span>
+            Email<span className="bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">Curator</span>
         </h1>
         <p className="text-purple-100 text-xl max-w-2xl mx-auto leading-relaxed mb-6">
             Transform your thoughts into perfectly crafted emails with multiple AI providers

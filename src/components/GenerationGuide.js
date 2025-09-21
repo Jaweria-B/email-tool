@@ -84,7 +84,7 @@ const FloatingGenerationGuide = () => {
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-2">Quick Start Guide</h2>
-              <p className="text-purple-200">Get started with EmailCraft in minutes!</p>
+              <p className="text-purple-200">Get started with EmailCurator in minutes!</p>
             </div>
 
             {/* Getting Started Steps */}

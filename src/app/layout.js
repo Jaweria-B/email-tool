@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Email Craft",
+  title: "Email Curator",
   description: "AI-powered email generator, and email sender",
   icons: {
     icon: [

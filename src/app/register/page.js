@@ -55,7 +55,7 @@ const Register = () => {
             <Mail className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            Join EmailCraft
+            Join EmailCurator
           </h1>
           <p className="text-purple-100">
             Create your account to get started

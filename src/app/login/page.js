@@ -48,7 +48,7 @@ const LoginPage = () => {
             Welcome Back
           </h1>
           <p className="text-purple-100">
-            Sign in to access EmailCraft
+            Sign in to access EmailCurator
           </p>
         </div>
 
