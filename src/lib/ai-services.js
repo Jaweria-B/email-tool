@@ -43,7 +43,7 @@ export class EmailGenerationService {
     try {
       // First, clean the response
       const cleanedResponse = this.cleanJsonResponse(response);
-      console.log('Cleaned response:', cleanedResponse);
+      // console.log('Cleaned response:', cleanedResponse);
       
       const jsonResponse = JSON.parse(cleanedResponse);
       

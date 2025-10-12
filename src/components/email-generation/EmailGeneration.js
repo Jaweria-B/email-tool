@@ -278,10 +278,10 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                     
                     <div className="space-y-6">
                         {/* AI Provider Selection */}
-                        <ProviderSelector
+                        {/* <ProviderSelector
                             selectedProvider={selectedProvider}
                             onProviderChange={handleProviderChange}
-                        />
+                        /> */}
 
                         {/* Free Trial Status Banner */}
                         {!user && (
