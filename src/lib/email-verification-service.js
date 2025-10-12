@@ -16,7 +16,7 @@ const createTransporter = () => {
       // Do not fail on invalid certs
       rejectUnauthorized: false
     },
-    from: `"EmailCurator" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+    from: `"Reachify" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`
   });
 };
 
@@ -31,13 +31,13 @@ export const sendVerificationEmail = async (email, code, name) => {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: `"EmailCurator" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"Reachify" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to: email,
-      subject: 'Verify Your EmailCurator Account',
+      subject: 'Verify Your Reachify Account',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; color: white; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px;">Welcome to EmailCurator!</h1>
+            <h1 style="margin: 0; font-size: 28px;">Welcome to Reachify!</h1>
             <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Hi ${name}, verify your account to get started</p>
           </div>
           
@@ -59,12 +59,12 @@ export const sendVerificationEmail = async (email, code, name) => {
           
           <div style="text-align: center; margin-top: 20px; padding: 20px;">
             <p style="font-size: 12px; color: #888;">
-              © 2025 EmailCurator. All rights reserved.
+              © 2025 Reachify. All rights reserved.
             </p>
           </div>
         </div>
       `,
-      text: `Welcome to EmailCurator, ${name}!\n\nYour verification code is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this verification, please ignore this email.`
+      text: `Welcome to Reachify, ${name}!\n\nYour verification code is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this verification, please ignore this email.`
     };
 
     await transporter.sendMail(mailOptions);
