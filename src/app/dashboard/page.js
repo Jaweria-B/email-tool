@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Mail, User, Calendar, TrendingUp, Activity, Send, Eye, LogOut, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuthContext } from '@/providers/AuthProvider';
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const { user, isLoadingUser, handleLogout: contextLogout } = useAuthContext();
   const [emailHistory, setEmailHistory] = useState([]);
   const [stats, setStats] = useState({
     totalEmails: 0,
@@ -14,20 +15,6 @@ const Dashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        router.push('/login');
-      }
-    } catch (error) {
-      router.push('/login');
-    }
-  }, [router]);
 
   const calculateStats = useCallback((emails) => {
     const currentMonth = new Date().getMonth();
@@ -79,17 +66,19 @@ const Dashboard = () => {
   }, [calculateStats]);
 
   useEffect(() => {
-    checkAuth();
-    loadEmailHistory();
-  }, [checkAuth, loadEmailHistory]);
+    if (!isLoadingUser && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoadingUser, router]);
+
+  useEffect(() => {
+    if (user) {
+      loadEmailHistory();
+    }
+  }, [user, loadEmailHistory]);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    await contextLogout();
   };
 
   const formatDate = (dateString) => {

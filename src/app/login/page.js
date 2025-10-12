@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { Mail, User, LogIn, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuthContext } from '@/providers/AuthProvider';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { refreshUser } = useAuthContext();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +27,7 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
+        await refreshUser();
         router.push('/dashboard');
       } else {
         setError(data.error || 'Login failed');
