@@ -76,7 +76,7 @@ const AnimatedEmailStats = () => {
           {/* Generated Emails */}
           <div className="text-center group cursor-pointer transform hover:scale-105 transition-transform duration-300">
             <div className="relative">
-              <div className="bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full p-4 mb-3 shadow-lg group-hover:shadow-emerald-400/30 transition-shadow duration-300">
+              <div className="bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full w-15 h-15 p-4 mb-3 shadow-lg group-hover:shadow-emerald-400/30 transition-shadow duration-300">
                 <Mail className="h-6 w-6 text-white" />
                 <div className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-1 animate-pulse">
                   <Sparkles className="h-3 w-3 text-white" />
@@ -97,7 +97,7 @@ const AnimatedEmailStats = () => {
           {/* Sent Emails */}
           <div className="text-center group cursor-pointer transform hover:scale-105 transition-transform duration-300">
             <div className="relative">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-4 mb-3 shadow-lg group-hover:shadow-purple-400/30 transition-shadow duration-300">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-15 h-15 p-4 mb-3 shadow-lg group-hover:shadow-purple-400/30 transition-shadow duration-300">
                 <Send className="h-6 w-6 text-white" />
                 <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-full p-1 animate-bounce">
                   <TrendingUp className="h-3 w-3 text-white" />
