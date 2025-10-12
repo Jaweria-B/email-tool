@@ -16,27 +16,18 @@ export async function POST(request) {
     }
 
     // Parse the request body
-    const { provider, prompt } = await request.json();
+    const { prompt } = await request.json();
 
     // Validate required fields
-    if (!provider || !prompt) {
+    if (!prompt) {
       return NextResponse.json(
-        { error: 'Provider and prompt are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate provider
-    const validProviders = Object.values(AI_PROVIDERS);
-    if (!validProviders.includes(provider)) {
-      return NextResponse.json(
-        { error: `Invalid provider. Must be one of: ${validProviders.join(', ')}` },
+        { error: 'Prompt is required' },
         { status: 400 }
       );
     }
 
     // Create the email generation service with the internal API key
-    const emailService = new EmailGenerationService(provider, apiKey);
+    const emailService = new EmailGenerationService(AI_PROVIDERS.GEMINI, apiKey);
 
     // Generate the email
     const result = await emailService.generateEmail(prompt);

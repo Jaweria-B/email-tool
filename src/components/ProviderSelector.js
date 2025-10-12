@@ -6,24 +6,6 @@ import { AI_PROVIDERS, AI_PROVIDER_INFO } from '../lib/ai-config';
 const ProviderSelector = ({ selectedProvider, onProviderChange }) => {
   const providers = [
     { 
-      value: AI_PROVIDERS.QWEN, 
-      icon: Sparkles, 
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-500/20'
-    },
-    { 
-      value: AI_PROVIDERS.OPENAI, 
-      icon: Brain, 
-      color: 'from-green-500 to-blue-500',
-      bgColor: 'bg-green-500/20'
-    },
-    { 
-      value: AI_PROVIDERS.DEEPSEEK, 
-      icon: Zap, 
-      color: 'from-blue-500 to-purple-500',
-      bgColor: 'bg-blue-500/20'
-    },
-    { 
       value: AI_PROVIDERS.GEMINI, 
       icon: Bot, 
       color: 'from-orange-500 to-red-500',

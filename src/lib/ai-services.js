@@ -37,22 +37,7 @@ export class EmailGenerationService {
   async generateEmail(prompt) {
     let response;
     
-    switch (this.provider) {
-      case AI_PROVIDERS.QWEN:
-        response = await this.generateWithQwen(prompt);
-        break;
-      case AI_PROVIDERS.OPENAI:
-        response = await this.generateWithOpenAI(prompt);
-        break;
-      case AI_PROVIDERS.DEEPSEEK:
-        response = await this.generateWithDeepSeek(prompt);
-        break;
-      case AI_PROVIDERS.GEMINI:
-        response = await this.generateWithGemini(prompt);
-        break;
-      default:
-        throw new Error(`Unsupported AI provider: ${this.provider}`);
-    }
+    response = await this.generateWithGemini(prompt);
 
     // Enhanced JSON parsing for all responses
     try {
@@ -120,108 +105,6 @@ export class EmailGenerationService {
         body: response || 'Email generation encountered an issue. Please try again.'
       };
     }
-  }
-
-  async generateWithQwen(prompt) {
-    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.QWEN], {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: AI_MODELS[AI_PROVIDERS.QWEN],
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
-          },
-          {
-            role: 'user', 
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        top_p: 0.7,
-        frequency_penalty: 1,
-        top_k: 50
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`QWEN API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  }
-
-  async generateWithOpenAI(prompt) {
-    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.OPENAI], {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: AI_MODELS[AI_PROVIDERS.OPENAI],
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  }
-
-  async generateWithDeepSeek(prompt) {
-    const response = await fetch(AI_ENDPOINTS[AI_PROVIDERS.DEEPSEEK], {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: AI_MODELS[AI_PROVIDERS.DEEPSEEK],
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert email writing assistant. Write professional, clear, and engaging emails based on the user\'s requirements. Return ONLY a valid JSON object with "subject" and "body" fields. Do not include any markdown formatting or extra characters.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        top_p: 0.9,
-        stream: false
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
   }
 
   async generateWithGemini(prompt) {
