@@ -299,7 +299,7 @@ const EmailSenderFeedback = ({ onClose, onSubmit, emailSent = false }) => {
                 </div>
 
                 <div>
-                  <label className="block text-white font-medium mb-3">Trust Level with EmailCurator</label>
+                  <label className="block text-white font-medium mb-3">Trust Level with Reachify</label>
                   <StarRating
                     rating={feedback.security.trustLevel}
                     onChange={(rating) => setFeedback(prev => ({
@@ -366,7 +366,7 @@ const EmailSenderFeedback = ({ onClose, onSubmit, emailSent = false }) => {
                 </div>
 
                 <div>
-                  <label className="block text-white font-medium mb-3">Would you use EmailCurator's sender again?</label>
+                  <label className="block text-white font-medium mb-3">Would you use Reachify's sender again?</label>
                   <div className="flex gap-4 justify-center">
                     <button
                       onClick={() => setFeedback(prev => ({

@@ -51,7 +51,7 @@ const LoginPage = () => {
             Welcome Back
           </h1>
           <p className="text-purple-100">
-            Sign in to access EmailCurator
+            Sign in to access Reachify
           </p>
         </div>
 
