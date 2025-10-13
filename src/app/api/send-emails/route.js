@@ -1,4 +1,3 @@
-// src/app/api/send-emails/route.js
 import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
 
@@ -15,6 +14,8 @@ const createBatches = (array, batchSize) => {
 };
 
 export async function POST(request) {
+  let transporter = null;
+  
   try {
     const { emails, subject, body, smtpConfig } = await request.json();
 
@@ -30,10 +31,9 @@ export async function POST(request) {
       return NextResponse.json({ message: 'SMTP configuration is required' }, { status: 400 });
     }
 
-    // Create transporter with custom SMTP configuration
+    // Create transporter ONCE - KEY FIX
     let transporterConfig;
 
-    // If host is not provided, fall back to Gmail service
     if (!smtpConfig.host || smtpConfig.host === 'smtp.gmail.com') {
       transporterConfig = {
         service: 'gmail',
@@ -41,27 +41,35 @@ export async function POST(request) {
           user: smtpConfig.auth.user,
           pass: smtpConfig.auth.pass,
         },
+        pool: {
+          maxConnections: 5,
+          maxMessages: 100,
+          rateDelta: 4000,
+          rateLimit: 14, // 14 emails per 4 seconds
+        },
       };
     } else {
-      // Use custom SMTP configuration
       transporterConfig = {
         host: smtpConfig.host,
         port: smtpConfig.port || 587,
-        secure: smtpConfig.secure || false, // true for 465 (SSL), false for other ports
+        secure: smtpConfig.secure || false,
         auth: {
           user: smtpConfig.auth.user,
           pass: smtpConfig.auth.pass,
         },
-        // Additional options for better compatibility
         tls: {
-          // Do not fail on invalid certs
           rejectUnauthorized: false
-        }
+        },
+        pool: {
+          maxConnections: 5,
+          maxMessages: 100,
+          rateDelta: 4000,
+          rateLimit: 20,
+        },
       };
 
-      // Add specific settings for common providers
       if (smtpConfig.host.includes('hostinger.com')) {
-        transporterConfig.secure = true; // Hostinger typically uses SSL
+        transporterConfig.secure = true;
         transporterConfig.port = smtpConfig.port || 465;
       } else if (smtpConfig.host.includes('outlook.com') || smtpConfig.host.includes('hotmail.com')) {
         transporterConfig.secure = false;
@@ -73,12 +81,7 @@ export async function POST(request) {
       }
     }
 
-    // console.log('Creating transporter with config:', {
-    //   ...transporterConfig,
-    //   auth: { user: transporterConfig.auth.user, pass: '[HIDDEN]' }
-    // });
-
-    const transporter = nodemailer.createTransport(transporterConfig);
+    transporter = nodemailer.createTransport(transporterConfig);
 
     // Verify the transporter configuration
     try {
@@ -93,22 +96,21 @@ export async function POST(request) {
     }
 
     // Configuration for batching
-    const BATCH_SIZE = 30; // Send emails in batches of 30
-    const BATCH_DELAY = 5000; // 5 second delay between batches
-    const EMAIL_DELAY = 0; // 200ms delay between individual emails within a batch
+    const BATCH_SIZE = 30;
+    const BATCH_DELAY = 2000; // 2 second delay between batches
+    const EMAIL_DELAY = 100; // 100ms delay between individual emails
 
-    // Divide emails into batches
     const emailBatches = createBatches(emails, BATCH_SIZE);
     const results = [];
 
-    // console.log(`Processing ${emails.length} emails in ${emailBatches.length} batches of ${BATCH_SIZE}`);
+    console.log(`Processing ${emails.length} emails in ${emailBatches.length} batches of ${BATCH_SIZE}`);
 
     // Process each batch
     for (let batchIndex = 0; batchIndex < emailBatches.length; batchIndex++) {
       const batch = emailBatches[batchIndex];
       const batchNumber = batchIndex + 1;
       
-      // console.log(`Processing batch ${batchNumber}/${emailBatches.length} with ${batch.length} emails`);
+      console.log(`Processing batch ${batchNumber}/${emailBatches.length} with ${batch.length} emails`);
 
       // Process emails in current batch
       for (let emailIndex = 0; emailIndex < batch.length; emailIndex++) {
@@ -120,11 +122,11 @@ export async function POST(request) {
             to: email,
             subject: subject,
             text: body,
-            html: body.replace(/\n/g, '<br>'), // Convert line breaks to HTML
+            html: body.replace(/\n/g, '<br>'),
           };
 
           await transporter.sendMail(mailOptions);
-          // console.log(`✓ Email sent successfully to ${email}`);
+          console.log(`✓ Email sent successfully to ${email}`);
           
           results.push({
             email: email,
@@ -135,7 +137,7 @@ export async function POST(request) {
           });
 
         } catch (error) {
-          // console.error(`✗ Error sending email to ${email}:`, error.message);
+          console.error(`✗ Error sending email to ${email}:`, error.message);
           results.push({
             email: email,
             success: false,
@@ -145,24 +147,27 @@ export async function POST(request) {
             timestamp: new Date().toISOString()
           });
         }
+
+        // Add delay between individual emails
+        if (emailIndex < batch.length - 1) {
+          await delay(EMAIL_DELAY);
+        }
       }
 
-      // console.log(`Batch ${batchNumber}/${emailBatches.length} completed`);
+      console.log(`Batch ${batchNumber}/${emailBatches.length} completed`);
 
       // Add delay between batches (except after the last batch)
       if (batchIndex < emailBatches.length - 1) {
-        // console.log(`Waiting ${BATCH_DELAY / 1000} seconds before next batch...`);
+        console.log(`Waiting ${BATCH_DELAY / 1000} seconds before next batch...`);
         await delay(BATCH_DELAY);
       }
     }
 
-    // Calculate summary statistics
     const successfulEmails = results.filter(r => r.success).length;
     const failedEmails = results.filter(r => !r.success).length;
     
-    // console.log(`Email sending completed: ${successfulEmails} successful, ${failedEmails} failed out of ${emails.length} total`);
+    console.log(`Email sending completed: ${successfulEmails} successful, ${failedEmails} failed out of ${emails.length} total`);
 
-    // Return the results in the expected format
     return NextResponse.json({
       results: results,
       summary: {
@@ -180,10 +185,15 @@ export async function POST(request) {
       message: 'Internal server error',
       error: error.message 
     }, { status: 500 });
+  } finally {
+    // Close the transporter connection when done
+    if (transporter) {
+      await transporter.close();
+      console.log('Transporter closed');
+    }
   }
 }
 
-// Optional: Add other HTTP methods if needed
 export async function GET() {
   return NextResponse.json({ message: 'GET method not supported for this endpoint' }, { status: 405 });
 }
