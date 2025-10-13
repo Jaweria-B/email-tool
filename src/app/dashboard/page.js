@@ -160,7 +160,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-8 w-8 text-blue-300" />
               <div>
-                <p className="text-purple-200 text-sm">Favorite Provider</p>
+                <p className="text-purple-200 text-sm">Provider</p>
                 <p className="text-white text-lg font-bold capitalize">{stats.favoriteProvider || 'None'}</p>
               </div>
             </div>
