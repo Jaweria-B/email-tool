@@ -42,6 +42,25 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
     const [showGenerationFeedback, setShowGenerationFeedback] = useState(false);
     const [showSenderFeedback, setShowSenderFeedback] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
+    const [hasFreeEmail, setHasFreeEmail] = useState(true);
+
+    useEffect(() => {
+        const checkFreeEmail = async () => {
+            if (!user) {
+                try {
+                    const response = await fetch('/api/check-free-email');
+                    if (response.ok) {
+                        const data = await response.json();
+                        setHasFreeEmail(data.hasFreeEmail);
+                    }
+                } catch (error) {
+                    console.error('Failed to check free email status:', error);
+                }
+            }
+        };
+
+        checkFreeEmail();
+    }, [user]);
 
     const tones = [
         { value: 'professional', label: 'Professional', icon: Briefcase },
@@ -264,7 +283,7 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                         /> */}
 
                         {/* Free Trial Status Banner */}
-                        {!user && (
+                        {!user && hasFreeEmail && (
                             <div className="rounded-xl p-4 border bg-green-500/20 border-green-400/30 text-green-200">
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="h-4 w-4" />
@@ -274,6 +293,19 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                                 </div>
                                 <p className="text-sm mt-1">
                                     Try our AI email generator - no sign up required!
+                                </p>
+                            </div>
+                        )}
+                         {!user && !hasFreeEmail && (
+                            <div className="rounded-xl p-4 border bg-red-500/20 border-red-400/30 text-red-200">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4" />
+                                    <span className="font-semibold">
+                                        Free email limit reached
+                                    </span>
+                                </div>
+                                <p className="text-sm mt-1">
+                                    Please sign in to continue generating emails.
                                 </p>
                             </div>
                         )}
@@ -465,7 +497,7 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                         {/* Generate Button */}
                         <button
                             onClick={generateEmail}
-                            disabled={isLoading}
+                            disabled={isLoading || (!user && !hasFreeEmail)}
                             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 shadow-lg"
                         >
                             {isLoading ? (

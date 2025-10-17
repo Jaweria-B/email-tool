@@ -8,7 +8,7 @@ import { sessionDb, anonymousDevicesDb } from '@/lib/database';
 
 export async function POST(request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = request.cookies;
     const sessionToken = cookieStore.get('session_token')?.value;
     let deviceId = cookieStore.get('device_id')?.value;
 
