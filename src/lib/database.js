@@ -94,10 +94,39 @@ const initializeSchema = async () => {
       )
     `;
 
+    // Create anonymous_devices table
+    await sql`
+      CREATE TABLE IF NOT EXISTS anonymous_devices (
+        id SERIAL PRIMARY KEY,
+        device_id TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database tables:', error);
   }
+};
+
+// Anonymous device operations
+export const anonymousDevicesDb = {
+  // Create a new device record
+  create: async (deviceId) => {
+    await sql`
+      INSERT INTO anonymous_devices (device_id)
+      VALUES (${deviceId})
+      ON CONFLICT (device_id) DO NOTHING
+    `;
+  },
+
+  // Find a device by its ID
+  findByDeviceId: async (deviceId) => {
+    const result = await sql`
+      SELECT * FROM anonymous_devices WHERE device_id = ${deviceId}
+    `;
+    return result[0] || null;
+  },
 };
 
 // User operations

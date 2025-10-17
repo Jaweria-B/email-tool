@@ -1,10 +1,39 @@
 // app/api/generate-email/route.js
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { EmailGenerationService } from '@/lib/ai-services';
 import { AI_PROVIDERS } from '@/lib/ai-config';
+import { sessionDb, anonymousDevicesDb } from '@/lib/database';
 
 export async function POST(request) {
   try {
+    const cookieStore = cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+    const deviceId = cookieStore.get('device_id')?.value;
+
+    let user = null;
+    if (sessionToken) {
+      user = await sessionDb.findValid(sessionToken);
+    }
+
+    // For anonymous users, check if they have already generated a free email
+    if (!user) {
+      if (!deviceId) {
+        return NextResponse.json(
+          { error: 'Device ID not found. Please enable cookies.' },
+          { status: 400 }
+        );
+      }
+
+      const existingDevice = await anonymousDevicesDb.findByDeviceId(deviceId);
+      if (existingDevice) {
+        return NextResponse.json(
+          { error: 'You have already generated your free email. Please sign in to continue.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Get the AIML API key from environment variables
     const apiKey = process.env.AIML_API_KEY;
     
@@ -38,6 +67,11 @@ export async function POST(request) {
         { error: 'Invalid response from AI provider' },
         { status: 500 }
       );
+    }
+
+    // If the user is anonymous and email generation was successful, save the device ID
+    if (!user && deviceId) {
+      await anonymousDevicesDb.create(deviceId);
     }
 
     // Return the generated email
