@@ -12,11 +12,8 @@ import FloatingGenerationGuide from '@/components/GenerationGuide';
 import EmailOpener from '@/components/EmailOpener';
 import { useRouter } from 'next/navigation';
 
-const STORAGE_KEY = 'email_generator_free_trial_used';
-
-const EmailGeneration = ({ user, onLogout, isLoadingUser }) => { 
+const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
     const router = useRouter();
-    const [freeTrialUsed, setFreeTrialUsed] = useState(false);
     
     const [formData, setFormData] = useState({
         rawThoughts: '',
@@ -45,12 +42,6 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
     const [showGenerationFeedback, setShowGenerationFeedback] = useState(false);
     const [showSenderFeedback, setShowSenderFeedback] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
-
-    // Check free trial status on component mount
-    useEffect(() => {
-        const trialUsed = localStorage.getItem(STORAGE_KEY);
-        setFreeTrialUsed(trialUsed === 'true');
-    }, []);
 
     const tones = [
         { value: 'professional', label: 'Professional', icon: Briefcase },
@@ -104,19 +95,7 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
         setSelectedProvider(provider);
     };
 
-    const canGenerateEmail = () => {
-        return user || !freeTrialUsed;
-    };
-
     const generateEmail = async () => {
-        // Check if user can generate email
-        if (!canGenerateEmail()) {
-            if (confirm('You\'ve used your free email generation. Sign in to continue generating unlimited emails. Would you like to sign in now?')) {
-                router.push('/login');
-            }
-            return;
-        }
-
         if (!formData.rawThoughts.trim()) {
             alert('Please enter your thoughts about what you want to say');
             return;
@@ -139,17 +118,18 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate email');
+                if (response.status === 403) {
+                    if (confirm(errorData.error + ' Would you like to sign in now?')) {
+                        router.push('/login');
+                    }
+                } else {
+                    throw new Error(errorData.error || 'Failed to generate email');
+                }
+                return;
             }
 
             const result = await response.json();
             setGeneratedEmail(result);
-            
-            // Mark free trial as used if user is not authenticated
-            if (!user) {
-                localStorage.setItem(STORAGE_KEY, 'true');
-                setFreeTrialUsed(true);
-            }
             
             // Save activity to database only for authenticated users
             if (user) {
@@ -285,25 +265,15 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
 
                         {/* Free Trial Status Banner */}
                         {!user && (
-                            <div className={`rounded-xl p-4 border ${
-                                freeTrialUsed 
-                                    ? 'bg-red-500/20 border-red-400/30 text-red-200' 
-                                    : 'bg-green-500/20 border-green-400/30 text-green-200'
-                            }`}>
+                            <div className="rounded-xl p-4 border bg-green-500/20 border-green-400/30 text-green-200">
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="h-4 w-4" />
                                     <span className="font-semibold">
-                                        {freeTrialUsed 
-                                            ? 'Free trial used' 
-                                            : 'Free email generation available'
-                                        }
+                                        Free email generation available
                                     </span>
                                 </div>
                                 <p className="text-sm mt-1">
-                                    {freeTrialUsed 
-                                        ? 'Sign in to generate unlimited emails' 
-                                        : 'Try our AI email generator - no sign up required!'
-                                    }
+                                    Try our AI email generator - no sign up required!
                                 </p>
                             </div>
                         )}
@@ -495,7 +465,7 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                         {/* Generate Button */}
                         <button
                             onClick={generateEmail}
-                            disabled={isLoading || (!user && freeTrialUsed)}
+                            disabled={isLoading}
                             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 shadow-lg"
                         >
                             {isLoading ? (
@@ -506,32 +476,13 @@ const EmailGeneration = ({ user, onLogout, isLoadingUser }) => {
                             ) : (
                                 <>
                                     <Sparkles className="h-5 w-5" />
-                                    {user 
+                                    {user
                                         ? `Generate Email with ${AI_PROVIDER_INFO[selectedProvider].name}`
-                                        : freeTrialUsed 
-                                            ? 'Sign in to Generate More Emails'
-                                            : `Try Free Generation with ${AI_PROVIDER_INFO[selectedProvider].name}`
+                                        : `Try Free Generation with ${AI_PROVIDER_INFO[selectedProvider].name}`
                                     }
                                 </>
                             )}
                         </button>
-                        
-                        {/* Status message */}
-                        {!user && (
-                            <div className="flex items-center justify-center gap-2 mt-3 text-center">
-                                {freeTrialUsed ? (
-                                    <div className="flex items-center gap-2 text-orange-300 text-sm">
-                                        <div className="w-4 h-4 bg-orange-500 rounded-full animate-pulse"></div>
-                                        <span className="font-medium">Sign in for unlimited email generation</span>
-                                        <div className="w-4 h-4 bg-orange-500 rounded-full animate-pulse"></div>
-                                    </div>
-                                ) : (
-                                    <div className="text-green-300 text-sm">
-                                        <span className="font-medium">✨ One free email generation available</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
 
