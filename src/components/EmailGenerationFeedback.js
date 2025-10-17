@@ -96,7 +96,7 @@ const EmailGenerationFeedback = ({ onClose, emailData, provider, onSubmit }) => 
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 max-w-md mx-4 text-center">
           <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-white mb-2">Thank You! 🎉</h3>
-          <p className="text-purple-200">Your feedback helps us improve Reachify for everyone!</p>
+          <p className="text-purple-200">Your feedback helps us improve EmailCurator for everyone!</p>
         </div>
       </div>
     );
@@ -138,7 +138,7 @@ const EmailGenerationFeedback = ({ onClose, emailData, provider, onSubmit }) => 
             <div className="space-y-6 text-center">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Overall Experience</h3>
-                <p className="text-purple-200">How would you rate your overall experience with Reachify?</p>
+                <p className="text-purple-200">How would you rate your overall experience with EmailCurator?</p>
               </div>
 
               <EmojiSelector
@@ -322,7 +322,7 @@ const EmailGenerationFeedback = ({ onClose, emailData, provider, onSubmit }) => 
                 </div>
 
                 <div>
-                  <label className="block text-white font-medium mb-3">Would you recommend Reachify?</label>
+                  <label className="block text-white font-medium mb-3">Would you recommend EmailCurator?</label>
                   <div className="flex gap-4 justify-center">
                     <button
                       onClick={() => setFeedback(prev => ({ ...prev, wouldRecommend: true }))}
@@ -365,7 +365,7 @@ const EmailGenerationFeedback = ({ onClose, emailData, provider, onSubmit }) => 
                   <textarea
                     value={feedback.improvements}
                     onChange={(e) => setFeedback(prev => ({ ...prev, improvements: e.target.value }))}
-                    placeholder="Share your ideas for making Reachify even better..."
+                    placeholder="Share your ideas for making EmailCurator even better..."
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400"
                   />
