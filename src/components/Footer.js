@@ -140,19 +140,6 @@ const Footer = () => {
             {/* Connect Links */}
             <div className="space-y-3">
               <a
-                href="https://www.linkedin.com/in/jaweria-batool/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 text-purple-200 hover:text-white transition-all duration-300"
-              >
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300">
-                  <Linkedin className="h-4 w-4 text-white" />
-                </div>
-                <span className="group-hover:translate-x-1 transition-transform duration-300">Connect with Jaweria Batool</span>
-                <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-300" />
-              </a>
-              
-              <a
                 href="https://uinfo.org/"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -297,16 +284,6 @@ const Footer = () => {
                   className="text-purple-200 font-medium hover:text-white transition-colors duration-300 mx-1"
                 >
                   uinfo.org
-                </a>
-                <span className="text-purple-400">•</span>
-                <a 
-                  href="https://www.linkedin.com/in/jaweria-batool/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-purple-200 hover:text-white transition-colors duration-300 ml-1 flex items-center gap-1"
-                >
-                  <Linkedin className="h-3 w-3" />
-                  <span className="text-xs">AI Expert</span>
                 </a>
               </span>
             </div>
